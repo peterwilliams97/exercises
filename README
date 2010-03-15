@@ -2,6 +2,16 @@ Exercises for AI Course
 =======================
 2010/03/15 First draft of Wolf-Rabbit-Cabbage problem
 -----------------------------------------------------
+Specify a state representation, operators and goal test to solve the wolf, sheep & 
+cabbage problem: 
+A man with a boat must carry his wolf, sheep and cabbage to the other side of 
+a river.  He can only carry one object at a time.  The wolf will eat the sheep 
+and the sheep will eat the cabbage if either is left alone with the potential 
+meal.  How can he get all three to the other side? (See 
+http://www.plastelina.net/examples/games/game1.html.) 
+Specify a heuristic function over the states. Illustrate how a backtracking control 
+strategy would use this function in attempting to solve this problem. 
+
 Output
 ------
 macintosh:exercises user$ python wolf_sheep_cabbage.py 
@@ -9,7 +19,7 @@ starting_state = []:0
 starting_state.dist() = 0
 target_state = [0, 1, 2]:1
 target_state.dist() = 3
-===================================
+=================================== All nodes
 node(1):[]:0  0
 node(2):[]:0, [1]:1 dead-end 1
 node(3):[]:0, [0, 2]:1  1

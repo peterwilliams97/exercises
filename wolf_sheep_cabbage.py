@@ -154,16 +154,9 @@ def search(G, node, target_state, depth):
     addChildNodes(node, target_state)
     for n in node._children:
         search(G, n, target_state, depth+1)
-   # print node.describeNode()
-              
-def display(node, depth):
-    "Print node then its children to display a search graph recursively."
-    print node.describeNode()
-    for c in node._children:
-        display(c, depth + 1)
-        
+                        
 def appendNode(node_list, node):
-    "Applend node and all its children to node_list"
+    "Append node and all its children to node_list"
     node_list.append(node)
     for c in node._children:
         appendNode(node_list, c)
@@ -178,13 +171,14 @@ def solve(starting_state, target_state):
     "Find paths from starting_state to target_state"
     G = Node(False, starting_state)
     search(G, G, target_state, 0)
-    print "==================================="
     node_list = gatherNodes(G)
-    matches = filter(lambda node: node._is_target, node_list)
-    for node in matches:
-        node.describeNode()
-    print "==================================="
-    display(G, 0)
+    print '=================================== All nodes'
+    for node in node_list:
+        print node.describeNode()
+    print '=================================== Solution nodes'
+    for node in  filter(lambda node: node._is_target, node_list):
+        print node.describeNode()
+   
  
 def h(s):
     "Heuristic function"
