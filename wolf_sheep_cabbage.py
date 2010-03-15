@@ -4,24 +4,18 @@ import sys, math, copy, decimal
 Wolf, Rabbit, Cabbage = range(3)
 Orig, Dest = range(2)
 
-
-# Set of all players
+# Set of all things
 all_things = set([Wolf, Rabbit, Cabbage])
 
 # Possible outcomes of a search. 
-# MovesLeft: there are moves left to make so keep searching
-# NoMovesLeft: there are no moves left to make so give up
-# FoundTarget: success    
+#   MovesLeft: there are moves left to make so keep searching
+#   NoMovesLeft: there are no moves left to make so give up
+#   FoundTarget: success    
 MovesLeft, NoMovesLeft, FoundTarget = range(3)
-result_map = { MovesLeft:'partial', NoMovesLeft:'dead-end', FoundTarget:'TARGET!' }
+results_descriptions = { MovesLeft:'partial', NoMovesLeft:'dead-end', FoundTarget:'TARGET!' }
 
 def describeResult(result):
-    if result == MovesLeft:
-        return 'partial'
-    elif result == NoMovesLeft:
-        return 'dead-end'
-    elif result == FoundTarget:
-        return 'TARGET'
+    return results_descriptions[result]
 
 class State:
     """Wolf Rabbit Cabbage state.
@@ -44,14 +38,11 @@ class Node:
     _state = State(set([]), Orig)
     _parent = False
     _children = []
-   # _visited = False
     def __init__(self, parent, state):
-    #    print "new node:", self.describe()
         self._state = state
         self._parent = parent
         self. _children = []
         self._result = MovesLeft
-       # self._visited = False
     def describe(self):
         return self._state.describe() + " - c = " + str(len(self._children)) # + " " + str(self._visited)
     def ancestorStates(self):
@@ -62,7 +53,7 @@ class Node:
             anc.append(node._state)
             node = node._parent
         anc.reverse()
-        return anc # list.reverse(anc) # anc.reverse()
+        return anc 
     def describeAncestors(self):
         description = "ancestors: "
         for a in self.ancestorStates():
@@ -83,18 +74,19 @@ class Node:
             
 class Move:
     """A possible move. Has 1 or 2 passengers and a direction
-        Direction is starting point of journey (from Orig or from Dest)"""
+        _starting_point is starting point of journey (from Orig or from Dest)"""
     _passengers = set([])
-    _direction = Orig
-    def __init__(self, passengers, direction):
+    _starting_point = Orig
+    def __init__(self, passengers, starting_point):
         self._passengers = passengers
-        self._direction = direction
+        self._starting_point = starting_point
 
 def safeCombo(things):
+    "Safe combinations of things - where no thing will eat another thing"
     return things != set([Wolf, Rabbit]) and things != set([Rabbit, Cabbage]) 
     
 def validState(state):
-    """Tests for a valid move
+    """Tests for a valid state
     Returns True if both sides of the river are safe"""
     if state._boat_at_dest:
         return safeCombo(state.thingsOnSide(Orig))
@@ -109,12 +101,9 @@ def apply(move, state):
         for p in move._passengers:
             new_state._things_at_dest.add(p)
     else:
-        #print "    before:", new_state.describe()
         new_state._boat_at_dest = Orig
-        #print "    after:", new_state.describe()
         for p in move._passengers:
             new_state._things_at_dest.remove(p)
-   # print "   apply:", list(move._passengers), move._direction, " to", state.describe(), " ->", new_state.describe()
     return new_state
             
 def subsetsOf(passengers):
@@ -131,7 +120,6 @@ def subsetsOf(passengers):
 def possibleMoves(state):
     "Return list of all possible moves for state, some of which may be invalid"
     candidates = state.thingsOnSide(state._boat_at_dest)
-   # print "  candidates =", list(candidates)
     moves = [Move(ss, state._boat_at_dest) for ss in subsetsOf(candidates)]
     return moves
     
@@ -139,17 +127,12 @@ def validMoves(moves):
     "Return list of valid moves in 'moves'"
     return [m for m in moves if safeCombo(m._passengers)]
     
-
-
- 
 def explore(node, target_state):
     """Given an node with a state that is otherwise empty, create child nodes for all viable moves from that state
        Return MovesLeft, NoMovesLeft or FoundTarget """
     result = NoMovesLeft
-  #  print " explore:", node.describe()
     moves2 = possibleMoves(node._state)
     moves = validMoves(moves2)
-   # for m in moves: print "  move =", list(m._passengers), m._direction
     for move in moves:
         new_state = apply(move, node._state)
         if validState(new_state) and not node.ancestorsContain(new_state):
@@ -165,8 +148,6 @@ def explore(node, target_state):
                 print "Found target ***"
                 break
     node._result = result
-    #print node.describeNode()
-    # for c in node._children: print "   child =", c.describe()
     return result
 
 max_depth = 4 
@@ -175,7 +156,6 @@ def search(G, node, target_state, depth):
     "Recursive function for depth first search of G, called for node"
     if depth > max_depth:
         return NoMovesLeft 
-    #print "search:", node._state.describe(), " - ", node.describeAncestors()
     result = explore(node, target_state)
     if result == MovesLeft:
         result = NoMovesLeft
@@ -191,8 +171,6 @@ def search(G, node, target_state, depth):
     
 def display(node, depth):
     "Recursively display a graph."
-   # print "  " * depth, "node._state =", node._state.describe()
-   # print "  " * depth, sorted(node._state)
     for c in node._children:
         display(c, depth + 1)
  
@@ -210,10 +188,6 @@ def g(s):
     "Distance travelled"
     return h(s)
                             
-
-        
-   
-    
 if __name__ == '__main__':
     starting_state = State(set([]), Orig)
     target_state = State(set([Wolf, Rabbit, Cabbage]), Dest)
