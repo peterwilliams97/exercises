@@ -136,14 +136,12 @@ class Node:
 def addChildNodes(node, target_state):
     """Given a node with a state that is otherwise empty, create child nodes for all viable moves from that state
        and detects target nodes """
-    moves = validMoves(possibleMoves(node._state))
-    for move in moves:
+    for move in validMoves(possibleMoves(node._state)):
         new_state = apply(move, node._state)
         if validState(new_state) and not node.ancestorsContain(new_state):
             new_node = Node(node, new_state)
             node._children.append(new_node)
-            if new_state._things_at_dest == target_state._things_at_dest:
-                new_node._is_target = True
+            new_node._is_target = (new_state._things_at_dest == target_state._things_at_dest)
 
 max_depth = 10 
  
