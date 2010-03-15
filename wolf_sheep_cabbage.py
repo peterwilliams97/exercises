@@ -1,21 +1,15 @@
 import sys, math, copy, decimal
 
+################################################################################
+## First part of this file describes the states of the Wolf Rabbit Cabbage 
+## problem and the operations on them
+################################################################################
 # Data types
 Wolf, Rabbit, Cabbage = range(3)
 Orig, Dest = range(2)
 
 # Set of all things
 all_things = set([Wolf, Rabbit, Cabbage])
-
-# Possible outcomes of a search. 
-#   MovesLeft: there are moves left to make so keep searching
-#   NoMovesLeft: there are no moves left to make so give up
-#   FoundTarget: success    
-#MovesLeft, NoMovesLeft, FoundTarget = range(3)
-#results_descriptions = { MovesLeft:'partial', NoMovesLeft:'dead-end', FoundTarget:'TARGET!' }
-
-def describeResult(result):
-    return results_descriptions[result]
 
 class State:
     """Wolf Rabbit Cabbage state.
@@ -30,58 +24,6 @@ class State:
         return len(self._things_at_dest)
     def describe(self) :
         return str(list(self._things_at_dest)) + ":" + str(self._boat_at_dest)
-
-unique_node_id = 0
-def getUniqueNodeId():
-    global unique_node_id
-    unique_node_id = unique_node_id + 1
-    return unique_node_id
-    
-class Node:
-    """Node in the Wolf Rabbit Cabbage graph"""
-    def __init__(self, parent, state):
-        self._state = state
-        self._parent = parent
-        self. _children = []
-        self._is_target = False
-        self._unique_id = getUniqueNodeId()
-    def describe(self):
-        return self._state.describe() + " - c = " + str(len(self._children)) # + " " + str(self._visited)
-    def ancestorStates(self):
-        "Return list of states of this node's ancestors not including itself"
-        anc = []
-        node = self._parent
-        while node:
-            anc.append(node._state)
-            node = node._parent
-        anc.reverse()
-        return anc 
-    def ancestorsContain(self, state):
-        "Returns true if ancestorStates contain state"
-        for a in self.ancestorStates():
-            if a._things_at_dest == state._things_at_dest and a._boat_at_dest == state._boat_at_dest:
-                return True
-        return False
-    def describeAncestors(self):
-        description = "ancestors: "
-        for a in self.ancestorStates():
-            description += a.describe() + ", "
-        return description
-    def nodeResult(self):   
-        node_type = ''
-        if len(self._children) == 0:
-            node_type = 'dead-end'
-        elif self._is_target:
-            node_type = 'TARGET!'
-        return node_type
-    def describeNode(self):
-        "Returns description of a node including ancestors and outcome"
-        description = "node(" + str(self._unique_id) + "):"
-        for a in self.ancestorStates():
-            description += a.describe() + ', '
-        description += self._state.describe() + ' ' +  self.nodeResult() + ' ' + str(len(self.ancestorStates()))
-        return description
-        
             
 class Move:
     """A possible move. Has 1 or 2 passengers and a direction
@@ -136,6 +78,61 @@ def validMoves(moves):
     "Return list of valid moves in 'moves'"
     return [m for m in moves if safeCombo(m._passengers)]
     
+################################################################################
+## Second part of this file describes a search graph based on the Node class.
+################################################################################    
+    
+unique_node_id = 0
+def getUniqueNodeId():
+    global unique_node_id
+    unique_node_id = unique_node_id + 1
+    return unique_node_id
+    
+class Node:
+    """Node in the Wolf Rabbit Cabbage graph"""
+    def __init__(self, parent, state):
+        self._state = state
+        self._parent = parent
+        self. _children = []
+        self._is_target = False
+        self._unique_id = getUniqueNodeId()
+    def describe(self):
+        return self._state.describe() + " - c = " + str(len(self._children)) # + " " + str(self._visited)
+    def ancestorStates(self):
+        "Return list of states of this node's ancestors not including itself"
+        anc = []
+        node = self._parent
+        while node:
+            anc.append(node._state)
+            node = node._parent
+        anc.reverse()
+        return anc 
+    def ancestorsContain(self, state):
+        "Returns true if ancestorStates contain state"
+        for a in self.ancestorStates():
+            if a._things_at_dest == state._things_at_dest and a._boat_at_dest == state._boat_at_dest:
+                return True
+        return False
+    def describeAncestors(self):
+        description = "ancestors: "
+        for a in self.ancestorStates():
+            description += a.describe() + ", "
+        return description
+    def nodeResult(self):   
+        node_type = ''
+        if len(self._children) == 0:
+            node_type = 'dead-end'
+        elif self._is_target:
+            node_type = 'TARGET!'
+        return node_type
+    def describeNode(self):
+        "Returns description of a node including ancestors and outcome"
+        description = "node(" + str(self._unique_id) + "):"
+        for a in self.ancestorStates():
+            description += a.describe() + ', '
+        description += self._state.describe() + ' ' +  self.nodeResult() + ' ' + str(len(self.ancestorStates()))
+        return description
+        
 def addChildNodes(node, target_state):
     """Given a node with a state that is otherwise empty, create child nodes for all viable moves from that state
        and detects target nodes """
