@@ -18,8 +18,12 @@ class State:
     def __init__(self, things_at_dest, boat):
         self._things_at_dest = things_at_dest
         self._boat_at_dest = boat
+    def __eq__(self, state):
+        return self._things_at_dest == state._things_at_dest
     def thingsOnSide(self, side):
         return (side == Orig) and all_things.difference(self._things_at_dest) or self._things_at_dest
+    def numThingsLeft(self):
+        return len(self.thingsOnSide(Orig))
     def describe(self) :
         return str(list(self._things_at_dest)) + ":" + str(self._boat_at_dest)
             
@@ -88,14 +92,20 @@ def getUniqueNodeId():
     
 class Node:
     """Node in the Wolf Rabbit Cabbage graph"""
-    def __init__(self, parent, state):
+    def __init__(self, parent, state, g, h):
         self._state = state
         self._parent = parent
         self. _children = []
         self._is_target = False
         self._unique_id = getUniqueNodeId()
+        self._g_val = g(self)
+        self._h_val = h(self)
+      #  print 'New node =', self.describeNode()
+        
+    def f(self):
+        return self._g_val + self._h_val
     def describe(self):
-        return self._state.describe() + " - c = " + str(len(self._children)) # + " " + str(self._visited)
+        return self._state.describe() + ' - c = ' + str(len(self._children)) # + " " + str(self._visited) 
     def ancestorStates(self):
         "Return list of states of this node's ancestors not including itself"
         anc = []
@@ -123,33 +133,49 @@ class Node:
         elif self._is_target:
             node_type = 'TARGET!'
         return node_type
+    def astarResult(self):
+        return '(' + str(self._g_val) + ' + ' + str(self._h_val) + ' = ' + str(self.f()) + ')'
     def describeNode(self):
         "Returns description of a node including ancestors and outcome"
         description = "node(" + str(self._unique_id) + "):"
         for a in self.ancestorStates():
             description += a.describe() + ', '
-        description += self._state.describe() + ' ' +  self.nodeResult() + ' ' + str(len(self.ancestorStates()))
+        #description += self._state.describe() + ' ' +  self.nodeResult() + ' ' + str(len(self.ancestorStates())) + ' ' + self.astarResult()
+        description += self._state.describe() + ' ' + self.astarResult()
         return description
         
-def addChildNodes(node, target_state):
+def addChildNodes(node, target_state, g, h):
     """Given a node with a state that is otherwise empty, create child nodes for all viable moves from that state
-       and detects target nodes """
+       and detect target nodes """
     for move in validMoves(possibleMoves(node._state)):
         new_state = apply(move, node._state)
         if validState(new_state) and not node.ancestorsContain(new_state):
-            new_node = Node(node, new_state)
+            new_node = Node(node, new_state, g, h)
             node._children.append(new_node)
             new_node._is_target = (new_state._things_at_dest == target_state._things_at_dest)
+            
+def getChildNodes(node, g, h):
+    """Given a node with a state that is otherwise empty, return child nodes for all viable moves from that state"""
+    child_nodes = []
+    for move in validMoves(possibleMoves(node._state)):
+        new_state = apply(move, node._state)
+        if validState(new_state) and not node.ancestorsContain(new_state):
+            new_node = Node(node, new_state, g, h)
+            child_nodes.append(new_node)
+    return child_nodes
 
 max_depth = 10 
  
-def search(G, node, target_state, depth):
-    "Search for target_state in node. Called recursively for depth-first search of G"
+def searchAstar(G, node, target_state, depth, g, h):
+    """Search for target_state in node. Called recursively for depth-first search of G
+       g and h are the functions from the A* algo"""
     if depth > max_depth:
         return NoMovesLeft 
-    addChildNodes(node, target_state)
+    addChildNodes(node, target_state, g, h)
+    best = min(node._children, lambda node: node.f())
+    node._children.sort(key=str.lower)
     for n in node._children:
-        search(G, n, target_state, depth+1)
+        searchAstar(G, n, target_state, depth+1, g, h)
                         
 def appendNode(node_list, node):
     "Append node and all its children to node_list"
@@ -163,33 +189,69 @@ def gatherNodes(G):
     appendNode(node_list, G)
     return node_list
  
-def solve(starting_state, target_state): 
-    "Find paths from starting_state to target_state"
-    G = Node(False, starting_state)
-    search(G, G, target_state, 0)
+def solve(starting_state, target_state, g, h): 
+    """Find paths from starting_state to target_state
+       g and h are the functions from the A* algo """
+    G = Node(False, starting_state, g, h)
+    searchAstar(G, G, target_state, 0, g, h)
     node_list = gatherNodes(G)
     print '=================================== All nodes'
     for node in node_list:
         print node.describeNode()
     print '=================================== Solution nodes'
-    for node in  filter(lambda node: node._is_target, node_list):
+    for node in filter(lambda node: node._is_target, node_list):
         print node.describeNode()
-   
+        
+def solveAstar(starting_state, target_state, g, h):
+    """Find A* solution to path from starting_state to target_state with path-cost function g()
+       and heuristic function h()"""
+    import heapq  
+    priority_queue = []         # priority queue to store nodes
+    heapq.heapify(priority_queue)
+    visited = {}                # dictionary to store previously visited nodes
+
+    # put the initial node on the queue
+    start = Node(None, starting_state, g, h)
+    heapq.heappush(priority_queue, start)
+
+    while (len(priority_queue) > 0):
+        #print 'len(priority_queue) =',  len(priority_queue)
+        node = heapq.heappop(priority_queue)
+        if node not in visited:
+            print 'node = ', node.describeNode()
+            if node._state == target_state:
+                return node
+            else:
+                children = getChildNodes(node, g, h)
+                for child in children:
+                    child._parent = node
+                    heapq.heappush(priority_queue, child)
+                    visited[node] = True
+                    priority_queue.sort(key = lambda node: -node.f())  # keep less costly nodes at the front
+    return None             # entire tree searched, no goal state found
+
  
-def h(s):
+def g(node):
+    "Path-cost function"
+    return len(node.ancestorStates())
+     
+def h(node):
     "Heuristic function"
-    return s.dist()
+    return node._state.numThingsLeft()
     
-def g(s):
-    "Distance travelled"
-    return h(s)
+
                             
 if __name__ == '__main__':
     starting_state = State(set([]), Orig)
     target_state = State(set([Wolf, Rabbit, Cabbage]), Dest)
     print "starting_state =", starting_state.describe()
     print "target_state =", target_state.describe()
-    solve(starting_state, target_state)
+    node = solveAstar(starting_state, target_state, g, h)
+    print '---------------------------------'
+    if node:
+        print 'Solution =', node.describeNode()
+    else:
+        print 'No solution'
     
  
 
