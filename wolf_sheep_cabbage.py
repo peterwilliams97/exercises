@@ -161,11 +161,28 @@ def display(node, depth):
     print node.describeNode()
     for c in node._children:
         display(c, depth + 1)
+        
+def appendNode(node_list, node):
+    "Applend node and all its children to node_list"
+    node_list.append(node)
+    for c in node._children:
+        appendNode(node_list, c)
+
+def gatherNodes(G):
+    "Gather all nodes in graph G into a list and return that list"
+    node_list = []
+    appendNode(node_list, G)
+    return node_list
  
 def solve(starting_state, target_state): 
     "Find paths from starting_state to target_state"
     G = Node(False, starting_state)
     search(G, G, target_state, 0)
+    print "==================================="
+    node_list = gatherNodes(G)
+    matches = filter(lambda node: node._is_target, node_list)
+    for node in matches:
+        node.describeNode()
     print "==================================="
     display(G, 0)
  
