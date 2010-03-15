@@ -11,8 +11,8 @@ all_things = set([Wolf, Rabbit, Cabbage])
 #   MovesLeft: there are moves left to make so keep searching
 #   NoMovesLeft: there are no moves left to make so give up
 #   FoundTarget: success    
-MovesLeft, NoMovesLeft, FoundTarget = range(3)
-results_descriptions = { MovesLeft:'partial', NoMovesLeft:'dead-end', FoundTarget:'TARGET!' }
+#MovesLeft, NoMovesLeft, FoundTarget = range(3)
+#results_descriptions = { MovesLeft:'partial', NoMovesLeft:'dead-end', FoundTarget:'TARGET!' }
 
 def describeResult(result):
     return results_descriptions[result]
@@ -21,8 +21,6 @@ class State:
     """Wolf Rabbit Cabbage state.
         _things_at_dest is set of these that have arrived at destination side
         _boat_at_dest is boat location """
-    _things_at_dest = set([])
-    _boat_at_dest = Orig
     def __init__(self, things_at_dest, boat):
         self._things_at_dest = things_at_dest
         self._boat_at_dest = boat
@@ -33,16 +31,20 @@ class State:
     def describe(self) :
         return str(list(self._things_at_dest)) + ":" + str(self._boat_at_dest)
 
+unique_node_id = 0
+def getUniqueNodeId():
+    global unique_node_id
+    unique_node_id = unique_node_id + 1
+    return unique_node_id
+    
 class Node:
     """Node in the Wolf Rabbit Cabbage graph"""
-    _state = State(set([]), Orig)
-    _parent = False
-    _children = []
     def __init__(self, parent, state):
         self._state = state
         self._parent = parent
         self. _children = []
-        self._result = MovesLeft
+        self._is_target = False
+        self._unique_id = getUniqueNodeId()
     def describe(self):
         return self._state.describe() + " - c = " + str(len(self._children)) # + " " + str(self._visited)
     def ancestorStates(self):
@@ -54,29 +56,36 @@ class Node:
             node = node._parent
         anc.reverse()
         return anc 
-    def describeAncestors(self):
-        description = "ancestors: "
-        for a in self.ancestorStates():
-            description += a.describe() + ", "
-        return description
-    def describeNode(self):
-        description = "node: "
-        for a in self.ancestorStates():
-            description += a.describe() + ", "
-        description += self._state.describe() + " " + describeResult(self._result)
-        return description
     def ancestorsContain(self, state):
         "Returns true if ancestorStates contain state"
         for a in self.ancestorStates():
             if a._things_at_dest == state._things_at_dest and a._boat_at_dest == state._boat_at_dest:
                 return True
         return False
+    def describeAncestors(self):
+        description = "ancestors: "
+        for a in self.ancestorStates():
+            description += a.describe() + ", "
+        return description
+    def nodeResult(self):   
+        node_type = ''
+        if len(self._children) == 0:
+            node_type = 'dead-end'
+        elif self._is_target:
+            node_type = 'TARGET!'
+        return node_type
+    def describeNode(self):
+        "Returns description of a node including ancestors and outcome"
+        description = "node(" + str(self._unique_id) + "):"
+        for a in self.ancestorStates():
+            description += a.describe() + ', '
+        description += self._state.describe() + ' ' +  self.nodeResult() + ' ' + str(len(self.ancestorStates()))
+        return description
+        
             
 class Move:
     """A possible move. Has 1 or 2 passengers and a direction
         _starting_point is starting point of journey (from Orig or from Dest)"""
-    _passengers = set([])
-    _starting_point = Orig
     def __init__(self, passengers, starting_point):
         self._passengers = passengers
         self._starting_point = starting_point
@@ -127,58 +136,41 @@ def validMoves(moves):
     "Return list of valid moves in 'moves'"
     return [m for m in moves if safeCombo(m._passengers)]
     
-def explore(node, target_state):
-    """Given an node with a state that is otherwise empty, create child nodes for all viable moves from that state
-       Return MovesLeft, NoMovesLeft or FoundTarget """
-    result = NoMovesLeft
-    moves2 = possibleMoves(node._state)
-    moves = validMoves(moves2)
+def addChildNodes(node, target_state):
+    """Given a node with a state that is otherwise empty, create child nodes for all viable moves from that state
+       and detects target nodes """
+    moves = validMoves(possibleMoves(node._state))
     for move in moves:
         new_state = apply(move, node._state)
         if validState(new_state) and not node.ancestorsContain(new_state):
-            #print "** ", new_state.describe(), ":", node.describeAncestors()
-            result = MovesLeft
             new_node = Node(node, new_state)
-            print new_node.describeNode()
             node._children.append(new_node)
             if new_state._things_at_dest == target_state._things_at_dest:
-                result = FoundTarget
-                new_node._result = result
-               # print new_node.describeNode()
-                print "Found target ***"
-                break
-    node._result = result
-    return result
+                new_node._is_target = True
 
-max_depth = 4 
+max_depth = 10 
  
 def search(G, node, target_state, depth):
-    "Recursive function for depth first search of G, called for node"
+    "Search for target_state in node. Called recursively for depth-first search of G"
     if depth > max_depth:
         return NoMovesLeft 
-    result = explore(node, target_state)
-    if result == MovesLeft:
-        result = NoMovesLeft
-        for n in node._children:
-            res = search(G, n, target_state, depth+1)
-            if res == FoundTarget:
-                result = FoundTarget
-                break
-            elif res == MovesLeft:
-                result = MovesLeft 
-    return result
-    
-    
+    addChildNodes(node, target_state)
+    for n in node._children:
+        search(G, n, target_state, depth+1)
+   # print node.describeNode()
+              
 def display(node, depth):
-    "Recursively display a graph."
+    "Print node then its children to display a search graph recursively."
+    print node.describeNode()
     for c in node._children:
         display(c, depth + 1)
  
-                       
-def solve(starting_state, target_state):    
+def solve(starting_state, target_state): 
+    "Find paths from starting_state to target_state"
     G = Node(False, starting_state)
     search(G, G, target_state, 0)
-   # display(G, 0)
+    print "==================================="
+    display(G, 0)
  
 def h(s):
     "Heuristic function"
