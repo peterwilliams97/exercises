@@ -19,7 +19,10 @@ class State:
         self._things_at_dest = things_at_dest
         self._boat_at_dest = boat
     def thingsOnSide(self, side):
-        return (side == Orig) and all_things.difference(self._things_at_dest) or self._things_at_dest
+        if side == Orig:
+            return all_things.difference(self._things_at_dest)
+        else:
+            return self._things_at_dest
     def describe(self) :
         return str(list(self._things_at_dest)) + ":" + str(self._boat_at_dest)
             
@@ -56,14 +59,11 @@ def apply(move, state):
     return new_state
             
 def subsetsOf(passengers):
-    "Return list of all 1 and 2 element subsets of passengers"
-    subsets = []
+    "Return list of all 0 and 1 element subsets of passengers"
+    subsets = [set([])]
     p = list(passengers)
     for i in range(len(p)):
         subsets.append(set([p[i]]))
-    for i in range(len(p)):
-       for j in range(i+1, len(p)):
-            subsets.append(set([p[i],p[j]]))
     return subsets
     
 def possibleMoves(state):
@@ -118,10 +118,10 @@ class Node:
         return description
     def nodeResult(self):   
         node_type = ''
-        if len(self._children) == 0:
-            node_type = 'dead-end'
-        elif self._is_target:
+        if self._is_target:
             node_type = 'TARGET!'
+        elif len(self._children) == 0:
+            node_type = 'dead-end'
         return node_type
     def describeNode(self):
         "Returns description of a node including ancestors and outcome"
@@ -145,11 +145,10 @@ max_depth = 10
  
 def search(G, node, target_state, depth):
     "Search for target_state in node. Called recursively for depth-first search of G"
-    if depth > max_depth:
-        return NoMovesLeft 
-    addChildNodes(node, target_state)
-    for n in node._children:
-        search(G, n, target_state, depth+1)
+    if depth <= max_depth and not node._is_target:
+        addChildNodes(node, target_state)
+        for n in node._children:
+            search(G, n, target_state, depth+1)
                         
 def appendNode(node_list, node):
     "Append node and all its children to node_list"
@@ -181,7 +180,7 @@ def h(s):
     return s.dist()
     
 def g(s):
-    "Distance travelled"
+    "Path-cost function"
     return h(s)
                             
 if __name__ == '__main__':

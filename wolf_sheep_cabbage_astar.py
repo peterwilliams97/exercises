@@ -21,7 +21,10 @@ class State:
     def __eq__(self, state):
         return self._things_at_dest == state._things_at_dest
     def thingsOnSide(self, side):
-        return (side == Orig) and all_things.difference(self._things_at_dest) or self._things_at_dest
+        if side == Orig:
+            return all_things.difference(self._things_at_dest)
+        else:
+            return self._things_at_dest
     def numThingsLeft(self):
         return len(self.thingsOnSide(Orig))
     def describe(self) :
@@ -60,14 +63,15 @@ def apply(move, state):
     return new_state
             
 def subsetsOf(passengers):
-    "Return list of all 1 and 2 element subsets of passengers"
-    subsets = []
+    "Return list of all 0 and 1 element subsets of passengers"
+    subsets = [set([])]
     p = list(passengers)
     for i in range(len(p)):
         subsets.append(set([p[i]]))
-    for i in range(len(p)):
-       for j in range(i+1, len(p)):
-            subsets.append(set([p[i],p[j]]))
+    if False:
+        for i in range(len(p)):
+           for j in range(i+1, len(p)):
+                subsets.append(set([p[i],p[j]]))
     return subsets
     
 def possibleMoves(state):
@@ -141,7 +145,7 @@ class Node:
         for a in self.ancestorStates():
             description += a.describe() + ', '
         #description += self._state.describe() + ' ' +  self.nodeResult() + ' ' + str(len(self.ancestorStates())) + ' ' + self.astarResult()
-        description += self._state.describe() + ' ' + self.astarResult()
+        description += self._state.describe() + ' ' + self.astarResult() + ' ' + str(len(self.ancestorStates()))
         return description
         
 def addChildNodes(node, target_state, g, h):
@@ -202,23 +206,30 @@ def solve(starting_state, target_state, g, h):
     for node in filter(lambda node: node._is_target, node_list):
         print node.describeNode()
         
+def sortFunc(node):
+   # print '****sort', node._unique_id
+    return (node.f(), node._unique_id)
+
 def solveAstar(starting_state, target_state, g, h):
     """Find A* solution to path from starting_state to target_state with path-cost function g()
        and heuristic function h()"""
     import heapq  
     priority_queue = []         # priority queue to store nodes
     heapq.heapify(priority_queue)
-    visited = {}                # dictionary to store previously visited nodes
+   
+    
+    visited = set([])           # set to store previously visited nodes
 
     # put the initial node on the queue
     start = Node(None, starting_state, g, h)
     heapq.heappush(priority_queue, start)
+    priority_queue.sort(key = sortFunc)  # keep less costly nodes at the front
 
     while (len(priority_queue) > 0):
         #print 'len(priority_queue) =',  len(priority_queue)
         node = heapq.heappop(priority_queue)
-        if node not in visited:
-            print 'node = ', node.describeNode()
+        if node._unique_id not in visited:
+            print node.describeNode()
             if node._state == target_state:
                 return node
             else:
@@ -226,18 +237,23 @@ def solveAstar(starting_state, target_state, g, h):
                 for child in children:
                     child._parent = node
                     heapq.heappush(priority_queue, child)
-                    visited[node] = True
-                    priority_queue.sort(key = lambda node: -node.f())  # keep less costly nodes at the front
+                    priority_queue.sort(key = sortFunc)  # keep less costly nodes at the front
+                    visited = visited | set([node._unique_id])
+                    if False:
+                        print 'priority_queue:'
+                        for p in priority_queue:
+                            print '    ', p.describeNode() 
+                    
     return None             # entire tree searched, no goal state found
 
  
 def g(node):
     "Path-cost function"
-    return len(node.ancestorStates())
+    return node._state.numThingsLeft() 
      
 def h(node):
     "Heuristic function"
-    return node._state.numThingsLeft()
+    return 0 # node._state.numThingsLeft() # + 1 - node._state._boat_at_dest
     
 
                             
@@ -246,12 +262,21 @@ if __name__ == '__main__':
     target_state = State(set([Wolf, Rabbit, Cabbage]), Dest)
     print "starting_state =", starting_state.describe()
     print "target_state =", target_state.describe()
-    node = solveAstar(starting_state, target_state, g, h)
-    print '---------------------------------'
-    if node:
-        print 'Solution =', node.describeNode()
-    else:
-        print 'No solution'
+    if False:
+        print starting_state._things_at_dest
+        print all_things
+        print all_things.difference(starting_state._things_at_dest)
+        print target_state._things_at_dest
+        print all_things
+        print all_things.difference(target_state._things_at_dest)
+
+    if True:
+        node = solveAstar(starting_state, target_state, g, h)
+        print '---------------------------------'
+        if node:
+            print 'Solution =', node.describeNode()
+        else:
+            print 'No solution'
     
  
 
