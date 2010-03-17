@@ -77,13 +77,6 @@ def getChildNodes(node, g, h):
             new_node = Node(node, new_state, g, h)
             child_nodes.append(new_node)
     return child_nodes
-
-                        
-def appendNode(node_list, node):
-    'Append node and all its children to node_list'
-    node_list.append(node)
-    for c in node._children:
-        appendNode(node_list, c)
          
 def sortFunc(node):
     return (node.f(), node._unique_id)
@@ -96,9 +89,8 @@ def solve(starting_state, target_state, g, h):
     heapify(priority_queue)
     visited = set([])           # set to store previously visited nodes
 
-    start = Node(None, starting_state, g, h)  # put the initial node on the queue
-    heappush(priority_queue, start)
-    priority_queue.sort(key = sortFunc)  # keep less costly nodes at the front
+    heappush(priority_queue, Node(None, starting_state, g, h))  # put the initial node on the queue
+ #   priority_queue.sort(key = sortFunc)  
 
     while (len(priority_queue) > 0):
         node = heappop(priority_queue)
@@ -111,7 +103,7 @@ def solve(starting_state, target_state, g, h):
                 for child in children:
                     child._parent = node
                     heappush(priority_queue, child)
-                    priority_queue.sort(key = sortFunc)  
+                    priority_queue.sort(key = sortFunc)  # keep less costly nodes at the front
                     visited = visited | set([node._unique_id])
                      
     return None             # entire tree searched, no goal state found
