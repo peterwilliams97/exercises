@@ -62,16 +62,29 @@ def corr_mat(cov, var):
     return corr    
                 
 def parse_line(line):
-    "Read a comma separated line into an array of floats"
-    return [float(n) for n in line.strip().split(',')]
+    'Read a comma separated line into an array of floats'
+    return map(float, line.strip().split(','))
+    #return [float(n) for n in line.strip().split(',')]
     
 def read_csv(filename):
     "Read a CSV file into a 2D array"
-    return [parse_line(line) for line in file(filename).read().strip().split('\n')]
+  #  return map(parse_line, file(filename).read().strip().split('\n'))
+    return map(lambda x: map(float, x.strip().split(',')) , file(filename).read().strip().split('\n'))
+   # return [parse_line(line) for line in file(filename).read().strip().split('\n')]
     
 def read_csv2(filename): return [[float(n) for n in line.strip().split(',')] for line in file(filename).read().strip().split('\n')]
 
-
+def write_line(row):
+    return ','.join(row)
+    
+def write_csv(filename, matrix):
+   # lines = [','.join(map(str,row)) for row in matrix]
+    '''
+    lines = map(lambda row: ','.join(map(str,row)), matrix)
+    all_lines = '\n'.join(lines) + '\n'
+    file(filename, 'w').write(all_lines)
+    '''
+    file(filename, 'w').write('\n'.join(map(lambda row: ','.join(map(str,row)), matrix)) + '\n')
     
 if __name__ == '__main__':
     if len(sys.argv) != 2:  
