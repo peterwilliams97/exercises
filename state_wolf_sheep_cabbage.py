@@ -1,7 +1,7 @@
-################################################################################
-## First part of this file describes the states of the Wolf Rabbit Cabbage 
-## problem and the operations on them
-################################################################################
+'''
+Describes the states of the Wolf Rabbit Cabbage 
+problem and the operations on them
+'''
 
 import sys, math, copy, decimal, solver_astar
 
