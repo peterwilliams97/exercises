@@ -105,14 +105,10 @@ def booleanize(n):
 def solve(x_name, y_name, w_name):
     X = Matrix()
     Y = Matrix()
-    
     X.read(x_name)
     Y.read(y_name)
     assert(X._height == Y._height)
     
-
-   # X = Matrix(4, 3, 5)
-   # Y = Matrix(4, 1, 2)
     W = Matrix(height=1, width = X._width, value = 1.0/X._width)
     print X.describe()
     print Y.describe()
@@ -135,7 +131,6 @@ def solve(x_name, y_name, w_name):
             Yr = mul(row, Wt)
             #print 'Yr', Yr.describe()
             Yc = mapMat(booleanize, Yr)
-            #print 'Yc', Yc.describe()
             E = sub(Y.getRow(r), Yc)
             Em = mul(E, Matrix(1,1,multiplier))
             W = add(W, mul(Em, row))
@@ -152,11 +147,7 @@ def solve(x_name, y_name, w_name):
             break
         print 'matches', matches, 'of', epoch
         multiplier = multiplier * decay
-    '''
-    X = read_csv(x_name)
-    Y = read_csv(y_name)
-    W = stat
-    '''
+   
                             
 if __name__ == '__main__':
     if len(sys.argv) != 4:  
