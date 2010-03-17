@@ -2,9 +2,17 @@
 Simple perceptron solver
 '''
 
-import sys, math, copy, decimal, statistics
-from statistics import read_csv
+import sys, math, copy
 
+
+def read_csv(filename):
+    'Read a CSV file into a 2D array'
+    return map(lambda x: map(float, x.strip().split(',')) , file(filename).read().strip().split('\n'))
+
+def write_csv(filename, matrix):
+    'Write a @D to a CSV file'
+    file(filename, 'w').write('\n'.join(map(lambda row: ','.join(map(str,row)), matrix)) + '\n')
+    
 class Matrix:
     '''2D Matrix class following conventions of http://en.wikipedia.org/wiki/Matrix_multiplication'''
     
@@ -44,12 +52,12 @@ class Matrix:
                 
             
     def read(self, fn):
-        self._data = statistics.read_csv(fn)
+        self._data = read_csv(fn)
         self._width = len(self._data[0])
         self._height = len(self._data)
         
     def write(self, filename):
-        statistics.write_csv(filename, self._data)
+        write_csv(filename, self._data)
         
     def describe(self):
         description = ''
@@ -102,7 +110,11 @@ def booleanize(n):
     else:
         return 0
         
+        
 def solve(x_name, y_name, w_name):
+    ''' x_name and y_name are csv files containing matrices X and Y
+        This function finds W: X*W'=Y by a Perceptron solver'''
+    
     X = Matrix()
     Y = Matrix()
     X.read(x_name)
