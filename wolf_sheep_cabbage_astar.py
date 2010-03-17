@@ -63,15 +63,11 @@ def apply(move, state):
     return new_state
             
 def subsetsOf(passengers):
-    "Return list of all 0 and 1 element subsets of passengers"
+    "Return list of all 0 and 1 element subsets of passengers. These are the allowed combinations of passengeers"
     subsets = [set([])]
     p = list(passengers)
     for i in range(len(p)):
         subsets.append(set([p[i]]))
-    if False:
-        for i in range(len(p)):
-           for j in range(i+1, len(p)):
-                subsets.append(set([p[i],p[j]]))
     return subsets
     
 def possibleMoves(state):
@@ -86,6 +82,7 @@ def validMoves(moves):
     
 ################################################################################
 ## Second part of this file describes a search graph based on the Node class.
+## Based on http://brandon.sternefamily.net/files/astar.txt
 ################################################################################    
     
 unique_node_id = 0
@@ -99,7 +96,7 @@ class Node:
     def __init__(self, parent, state, g, h):
         self._state = state
         self._parent = parent
-        self. _children = []
+        self._children = []
         self._is_target = False
         self._unique_id = getUniqueNodeId()
         self._g_val = g(self)
