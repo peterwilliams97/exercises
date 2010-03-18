@@ -23,7 +23,7 @@ class Node:
         self._is_target = False
         self._unique_id = getUniqueNodeId()
         self._g_val = g(state)
-        self._h_val = h(self)
+        self._h_val = h(state)
          
     def f(self):
         "f() in the A* algo"
