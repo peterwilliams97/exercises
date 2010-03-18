@@ -45,10 +45,7 @@ class Matrix:
                 if value != 0:
                     return False
         return True
-        
-    def applyFunc(self, func):
-        self._data = map(lambda row: map(func, row), self._data)
-                
+                        
     def read(self, fn):
         'Read matrix from a CSV file. Inverse of write()'
         self._data = readCsv(fn)
