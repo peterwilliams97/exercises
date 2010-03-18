@@ -2,15 +2,15 @@
 Simple perceptron solver
 '''
 
-import sys, math, copy
+import sys, math, copy, random
 
 
-def read_csv(filename):
-    'Read a CSV file into a 2D array'
+def readCsv(filename):
+    'Read a CSV file into a 2D array. 2D array is a list of lists of float, one list of float per CSV line'
     return map(lambda x: map(float, x.strip().split(',')) , file(filename).read().strip().split('\n'))
 
-def write_csv(filename, matrix):
-    'Write a @D to a CSV file'
+def writeCsv(filename, matrix):
+    'Write a @D to a CSV file. 2D array is a list of lists of float, one list of float per CSV line'
     file(filename, 'w').write('\n'.join(map(lambda row: ','.join(map(str,row)), matrix)) + '\n')
     
 class Matrix:
@@ -50,22 +50,17 @@ class Matrix:
     def applyFunc(self, func):
         self._data = map(lambda row: map(func, row), self._data)
                 
-            
     def read(self, fn):
-        self._data = read_csv(fn)
+        self._data = readCsv(fn)
         self._width = len(self._data[0])
         self._height = len(self._data)
         
     def write(self, filename):
-        write_csv(filename, self._data)
+        writeCsv(filename, self._data)
         
     def describe(self):
-        description = ''
-        for row in self._data:
-            for value in row:
-                description += str(value) + ', '
-            description += '\n'
-        return description.strip()
+        return '\n'.join(map(lambda row: ', '.join(map(str,row)), self._data))
+               
 
 def transpose(A):
     T = Matrix(height = A._width, width = A._height)
@@ -110,8 +105,76 @@ def booleanize(n):
     else:
         return 0
         
-        
-def solve(x_name, y_name, w_name):
+def solve(X, Y, max_rounds, decay):
+    "Returns W: X*W'=Y by a Perceptron solver"
+    assert(X._height == Y._height)
+    assert(max_rounds >= 2)
+    assert(decay <= 1.0)
+    W = Matrix(height=1, width = X._width, value = 1.0/X._width)
+    epoch = X._height
+    multiplier = 1.0
+    for round in range(max_rounds):
+        matches = 0
+        for r in range(epoch):
+            row = X.getRow(r)
+            Ycalc = mapMat(booleanize, mul(row, transpose(W)))
+            E = sub(Y.getRow(r), Ycalc)
+            if E.isZero():
+                matches = matches + 1
+            else:
+                W = add(W, mul(mul(E, Matrix(1,1,multiplier)), row))
+                print '** ', W.describe(), ' - ', row.describe()
+        if matches == epoch:
+             break
+    return (W, matches, epoch)
+
+def solveForFiles(x_name, y_name, w_name):
+    ''' x_name and y_name are csv files containing matrices X and Y
+        This function finds W: X*W'=Y by a Perceptron solver'''
+    X = Matrix()
+    Y = Matrix()
+    X.read(x_name)
+    Y.read(y_name)
+    print X.describe()
+    print Y.describe()
+    W, matches, epoch = solve(X, Y, 100, 0.99) 
+    print 'matches =', matches, 'of', epoch, 'W ='
+    print W.describe()
+    print "X*W'" 
+    print mul(X, transpose(W)).describe() 
+    W.write(w_name)
+  
+def makeTestData(number_points, w):
+    print 'w =', w
+    corners = ((1, 0, 0), (1, 0, 1), (1, 1, 0), (1, 1, 1))
+    calcY = lambda x: w[0]*x[0]+w[1]*x[1]+w[2]*x[2]
+    yvals = map(calcY, corners)
+    ymin = min(yvals)
+    ymax = max(yvals)
+    print 'ymin ymax =', ymin, ymax
+    assert(ymin < ymax)
+    xmin = (-ymin-1.0)/(ymax-ymin)
+    xmax = xmin + 2.0/(ymax - ymin)
+    print 'xmin xmax =', xmin, xmax
+    assert(xmin < xmax)
+    acorners = ((1, xmin, xmin), (1,xmin, xmax), (1, xmax, xmin), (1, xmax, xmax))
+    print 'adjusted Y', map(lambda c: str(calcY(c)), acorners)
+    
+    X = Matrix(number_points, 3)
+    Y = Matrix(number_points, 1)
+    for r in range(number_points):
+        flipflop = (r % 2 == 0)
+        while True:
+            x = (1, random.uniform(xmin, xmax), random.uniform(xmin, xmax)) 
+            y = booleanize(calcY(x))
+            if y == flipflop:
+                break
+        for j in (0, 1, 2) : 
+            X.put(r, j, x[j])
+        Y.put(r, 0, y)
+    return (X, Y)
+              
+def solveForFiles0(x_name, y_name, w_name):
     ''' x_name and y_name are csv files containing matrices X and Y
         This function finds W: X*W'=Y by a Perceptron solver'''
     
@@ -162,12 +225,31 @@ def solve(x_name, y_name, w_name):
    
                             
 if __name__ == '__main__':
-    if len(sys.argv) != 4:  
-        sys.exit("Specicify X and Y csv file names")
-    print "X = argv[1] = ", sys.argv[1]
-    print "Y = argv[2] = ", sys.argv[2]
-    print "W = argv[2] = ", sys.argv[3]
-    solve(sys.argv[1], sys.argv[2], sys.argv[3])
+    if False:
+        if len(sys.argv) != 4:  
+            sys.exit("Specicify X and Y csv file names")
+        print "X = argv[1] = ", sys.argv[1]
+        print "Y = argv[2] = ", sys.argv[2]
+        print "W = argv[2] = ", sys.argv[3]
+        solveForFiles(sys.argv[1], sys.argv[2], sys.argv[3])
+    if True:
+        n = 4
+        rounds = 5 * n
+        w = (0, 1, 1)
+        X, Y = makeTestData(n, w)
+        if n < 20:
+            print X.describe()
+            print Y.describe()
+            print '-------------------------------------'
+        W, matches, epoch = solve(X, Y, rounds, 0.9999) 
+        print 'w =', w, ', n=', n
+        print 'matches =', matches, 'of', epoch, 'rounds =', rounds, 'W ='
+        print W.describe()
+        if n < 20:
+            print '-------------------------------------'
+            print "X*W'" 
+            print mul(X, transpose(W)).describe() 
+
         
  
 
