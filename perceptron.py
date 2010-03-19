@@ -83,7 +83,7 @@ def sumProds(a, b):
     return sum(map(lambda z: z[0]*z[1], zip(a,b)))
                                                       
 def mul(A, B):
-    'Return A*B'
+    'Returns A*B'
     assert(A._width == B._height)
     return Matrix(A._height, B._width, func = lambda y,x: sumProds([A._data[y][i] for i in range(A._width)], [B._data[i][x] for i in range(B._height)]))
   
@@ -135,7 +135,7 @@ def solveForFiles(x_name, y_name, w_name):
     W.write(w_name)
   
 def makeTestData(number_points, w):
-    'Create test matrices X,Y for a weights vector w and number_points points'
+    'Creates test matrices X,Y for a weights vector w and number_points points'
     print 'w =', w
     corners = ((1, 0, 0), (1, 0, 1), (1, 1, 0), (1, 1, 1))
     calcY = lambda x: w[0]*x[0]+w[1]*x[1]+w[2]*x[2]
@@ -166,7 +166,7 @@ def makeTestData(number_points, w):
     return (X, Y)
  
 def runTest(number_points, w, rounds):   
-    'Run a test for a weights vector w,  number_points points and rounds calibration rounds'
+    'Runs a test for a weights vector w,  number_points points and rounds calibration rounds'
     X, Y = makeTestData(number_points, w)
     if number_points < 20:
         print X.describe()

@@ -45,7 +45,7 @@ class Node:
     def ancestorsContain(self, state):
         "Returns true if ancestorStates() contain state"
         for a in self.ancestorStates():
-            if a._things_at_dest == state._things_at_dest and a._boat_at_dest == state._boat_at_dest:
+            if a == state:
                 return True
         return False
            
