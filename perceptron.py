@@ -12,9 +12,9 @@ def readCsv(filename):
     'Read a CSV file into a 2D array. 2D array is a list of lists of float, one list of float per CSV line'
     return map(lambda x: map(float, x.strip().split(',')) , file(filename).read().strip().split('\n'))
 
-def writeCsv(filename, matrix):
+def writeCsv(filename, data):
     'Write a 2D array to a CSV file. 2D array is a list of lists of float, one list of float per CSV line'
-    file(filename, 'w').write('\n'.join(map(lambda row: ','.join(map(str,row)), matrix)) + '\n')
+    file(filename, 'w').write('\n'.join(map(lambda row: ','.join(map(str,row)), data)) + '\n')
     
 class Matrix:
     '''2D Matrix class following conventions of http://en.wikipedia.org/wiki/Matrix_multiplication'''
