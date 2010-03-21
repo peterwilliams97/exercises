@@ -42,6 +42,9 @@ class Node:
         ancestors.reverse()
         return ancestors 
         
+    def depth(self):
+        return len(self.ancestorStates())
+        
     def ancestorsContain(self, state):
         "Returns true if ancestorStates() contain state"
         for a in self.ancestorStates():
@@ -60,7 +63,7 @@ class Node:
     def astarResult(self):
         return '(' + str(self._g_val) + ' + ' + str(self._h_val) + ' = ' + str(self.f()) + ')'
         
-    def describeNode(self):
+    def describe(self):
         "Returns description of a node including ancestors and outcome"
         description = "node(" + str(self._unique_id) + "):"
         for state in self.ancestorStates():
@@ -76,12 +79,13 @@ def getChildNodes(node, g, h):
         if new_state.isValid() and not node.ancestorsContain(new_state):
             new_node = Node(node, new_state, g, h)
             child_nodes.append(new_node)
+    # print 'child_nodes', [(n._unique_id, n._state.describe()) for n in child_nodes]
     return child_nodes
          
 def sortFunc(node):
-    return (node.f(), node._unique_id)
+    return node.f()
 
-def solve(starting_state, target_state, g, h):
+def solve(starting_state, target_state, g, h, max_depth):
     '''Find A* solution to path from starting_state to target_state with path-cost function g()
        and heuristic function h()'''
     
@@ -93,18 +97,21 @@ def solve(starting_state, target_state, g, h):
  #   priority_queue.sort(key = sortFunc)  
 
     while (len(priority_queue) > 0):
+        print 'priority_queue', [(n._unique_id, n.f()) for n in priority_queue]
         node = heappop(priority_queue)
         if node._unique_id not in visited:
-            print node.describeNode()
+            print node.describe()
             if node._state == target_state:
                 return node
-            else:
+            elif node.depth() < max_depth:
                 children = getChildNodes(node, g, h)
+                #print 'children', [n._unique_id for n in children]
                 for child in children:
                     child._parent = node
                     heappush(priority_queue, child)
-                    priority_queue.sort(key = sortFunc)  # keep less costly nodes at the front
                     visited = visited | set([node._unique_id])
+                   # print '--priority_queue', [n._unique_id for n in priority_queue]
+                priority_queue.sort(key = sortFunc)  # keep less costly nodes at the front
                      
     return None             # entire tree searched, no goal state found
 
