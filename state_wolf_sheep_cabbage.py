@@ -95,6 +95,8 @@ def validMoves(moves):
     'Return list of valid moves in "moves"'
     return [m for m in moves if safeCombo(m._passengers)]
  
+def isTargetState(state):
+    return state == target_state 
     
 def g(state):
     'Path-cost function'
@@ -110,7 +112,7 @@ if __name__ == '__main__':
     target_state = State(set([Wolf, Rabbit, Cabbage]), Dest)
     print "starting_state =", starting_state.describe()
     print "target_state =", target_state.describe()
-    node = solver_astar.solve(starting_state, target_state, g, h, 20)
+    node = solver_astar.solve(starting_state, isTargetState, g, h, 20, False)
     print '---------------------------------'
     if node:
         print 'Solution =', node.describe()

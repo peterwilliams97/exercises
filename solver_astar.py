@@ -87,10 +87,11 @@ def getChildNodes(node, g, h):
 def sortFunc(node):
     return node.f()
 
-def solve(starting_state, target_state, g, h, max_depth):
+def solve(starting_state, isTargetState, g, h, max_depth, verb):
     '''Find A* solution to path from starting_state to target_state with path-cost function g()
        and heuristic function h()'''
     
+    verbose = verb
     priority_queue = []         # priority queue to store nodes
     heapify(priority_queue)
     visited = set([])           # set to store previously visited nodes
@@ -105,7 +106,7 @@ def solve(starting_state, target_state, g, h, max_depth):
         if node._unique_id not in visited:
             if verbose:
                 print node.describe()
-            if node._state == target_state:
+            if isTargetState(node._state):
                 return node
             elif node.depth() < max_depth:
                 children = getChildNodes(node, g, h)
