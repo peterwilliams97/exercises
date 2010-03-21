@@ -6,6 +6,8 @@
 '''    
 import sys, math, copy, decimal
 from heapq import *
+
+verbose = False
     
 unique_node_id = 0
 def getUniqueNodeId():
@@ -97,10 +99,12 @@ def solve(starting_state, target_state, g, h, max_depth):
  #   priority_queue.sort(key = sortFunc)  
 
     while (len(priority_queue) > 0):
-        print 'priority_queue', [(n._unique_id, n.f()) for n in priority_queue]
+        if verbose:
+            print 'priority_queue', [(n._unique_id, n.f()) for n in priority_queue]
         node = heappop(priority_queue)
         if node._unique_id not in visited:
-            print node.describe()
+            if verbose:
+                print node.describe()
             if node._state == target_state:
                 return node
             elif node.depth() < max_depth:

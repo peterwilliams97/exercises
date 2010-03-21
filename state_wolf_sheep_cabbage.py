@@ -110,10 +110,10 @@ if __name__ == '__main__':
     target_state = State(set([Wolf, Rabbit, Cabbage]), Dest)
     print "starting_state =", starting_state.describe()
     print "target_state =", target_state.describe()
-    node = solver_astar.solve(starting_state, target_state, g, h)
+    node = solver_astar.solve(starting_state, target_state, g, h, 20)
     print '---------------------------------'
     if node:
-        print 'Solution =', node.describeNode()
+        print 'Solution =', node.describe()
     else:
         print 'No solution'
     
