@@ -31,15 +31,9 @@ def getEdgeDistance(city1, city2):
 
 def pathLength(path):
     'Path-cost function'
-    last_city = A
-    distance = 0
-    for city in path:
-        distance += getEdgeDistance(last_city, city)
-        last_city = city
-    city = A
-    distance += getEdgeDistance(last_city, city)
-    return distance
-
+    full_path = [A] + path + [A]
+    return sum([getEdgeDistance(full_path[i-1],full_path[i]) for i in range(1, len(full_path))])
+  
 def describe(path):
     return ''.join(map(lambda c: chr(c+ord('A')), path)) + ':' + str(pathLength(path))
     
