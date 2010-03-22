@@ -26,8 +26,6 @@ def otherCity(edge, current_city):
     
 def getEdgeDistance(city1, city2):
     'Return distance between city1 and city2'
-    if city1 == city2:
-        print 'city1 == city ==', city1
     assert(city1 != city2)
     keys = [key for key in edges.keys() if city1 in key and city2 in key]
     return edges[key] 
@@ -46,7 +44,7 @@ class State:
     '''
     
     def __init__(self, cities_visited):
-        self._cities_visited = copy.deepcopy(cities_visited)
+        self._cities_visited = cities_visited[:]
                
     def __eq__(self, state):
         return self._cities_visited == state._cities_visited 
@@ -124,7 +122,7 @@ if __name__ == '__main__':
     print 'target_state   =', target_state.describe()
 
     print '---------------------------------'
-    node = solver_astar.solve(starting_state, isTargetState, g, h, 13, True)
+    node = solver_astar.solve(starting_state, isTargetState, g, h, 13, False)
     print '---------------------------------'
     if node:
         print 'Solution =', node.describe()

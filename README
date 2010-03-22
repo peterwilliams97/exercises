@@ -61,3 +61,56 @@ node(12):[]:0, [1]:1, [1]:0, [0, 1]:1, [0]:0, [0, 2]:1, [0, 2]:0, [0, 1, 2]:1 (0
 ---------------------------------
 Solution = node(12):[]:0, [1]:1, [1]:0, [0, 1]:1, [0]:0, [0, 2]:1, [0, 2]:0, [0, 1, 2]:1 (0 + 0 = 0) 7
 
+
+Traveling Salesman Problem
+--------------------------
+------------------ Testing All Starting Paths ------------------
+BEDC:34 -- BEDC:34 in 0 rounds
+CDEB:34 -- CDEB:34 in 0 rounds
+BCDE:38 -- BEDC:34 in 1 rounds
+BDEC:38 -- CDEB:34 in 1 rounds
+CEDB:38 -- BEDC:34 in 1 rounds
+EDCB:38 -- CDEB:34 in 1 rounds
+BCED:39 -- BEDC:34 in 2 rounds
+CBED:39 -- CDEB:34 in 1 rounds
+DEBC:39 -- BEDC:34 in 1 rounds
+DECB:39 -- BEDC:34 in 2 rounds
+BECD:41 -- BEDC:34 in 1 rounds
+DCEB:41 -- CDEB:34 in 1 rounds
+CBDE:42 -- BEDC:34 in 2 rounds
+EDBC:42 -- CDEB:34 in 2 rounds
+BDCE:44 -- CDEB:34 in 2 rounds
+CDBE:44 -- CDEB:34 in 1 rounds
+EBDC:44 -- BEDC:34 in 1 rounds
+ECDB:44 -- BEDC:34 in 2 rounds
+CEBD:45 -- BEDC:34 in 2 rounds
+DBEC:45 -- CDEB:34 in 2 rounds
+DCBE:45 -- BEDC:34 in 2 rounds
+EBCD:45 -- CDEB:34 in 2 rounds
+DBCE:49 -- BEDC:34 in 3 rounds
+ECBD:49 -- BEDC:34 in 3 rounds
+Average rounds 1.5
+------------------ Testing Simulated Annealing Params ------------------
+Path Length, # Rounds, Starting Temp, Alpha
+['34.0', '1.5', '1.4', '0.88']
+['34.0', '1.5', '1.4', '0.8']
+['34.0', '1.5', '1.3', '0.86']
+['34.0', '1.5', '1.3', '0.83']
+['34.0', '1.5', '1.3', '0.8']
+['34.0', '1.5', '1.2', '0.94']
+['34.0', '1.5', '1.2', '0.83']
+['34.0', '1.5', '1.2', '0.82']
+['34.0', '1.5', '1.1', '0.95']
+['34.0', '1.5', '1.1', '0.93']
+['34.0', '1.5', '1.1', '0.88']
+['34.0', '1.5', '1.1', '0.84']
+['34.0', '1.5', '1.1', '0.81']
+['34.0', '1.5', '1.1', '0.8']
+['34.0', '1.5', '1.0', '0.93']
+['34.0', '1.5', '1.0', '0.9']
+['34.0', '1.5', '1.0', '0.85']
+['34.0', '1.5', '1.0', '0.84']
+['34.0', '1.5', '1.0', '0.83']
+['34.0', '1.5', '1.0', '0.8']
+
+

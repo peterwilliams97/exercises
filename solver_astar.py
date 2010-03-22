@@ -11,13 +11,13 @@ verbose = False
     
 unique_node_id = 0
 def getUniqueNodeId():
-    "Return a unique id"
+    'Returns a unique id'
     global unique_node_id
     unique_node_id = unique_node_id + 1
     return unique_node_id
     
 class Node:
-    """Node in the Wolf Rabbit Cabbage graph"""
+    'Node in the search graph'
     def __init__(self, parent, state, g, h):
         self._state = state
         self._parent = parent
@@ -28,14 +28,15 @@ class Node:
         self._h_val = h(state)
          
     def f(self):
-        "f() in the A* algo"
+        'f() in the A* algo'
         return self._g_val + self._h_val
         
     def _describe(self):
+        'Returns sgtring description of node. Assumes state has describe() function that does same'
         return self._state.describe() + ' - c = ' + str(len(self._children)) # + " " + str(self._visited) 
         
     def ancestorStates(self):
-        "Return list of states of this node's ancestors not including itself"
+        "Returns list of states of this node's ancestors not including itself"
         ancestors = []
         node = self._parent
         while node:
@@ -45,36 +46,39 @@ class Node:
         return ancestors 
         
     def depth(self):
+        'Returns depth of node in graph'
         return len(self.ancestorStates())
         
     def ancestorsContain(self, state):
-        "Returns true if ancestorStates() contain state"
+        'Returns true if ancestorStates() contain state'
         for a in self.ancestorStates():
             if a == state:
                 return True
         return False
            
-    def nodeResult(self):   
-        node_type = ''
-        if len(self._children) == 0:
-            node_type = 'dead-end'
-        elif self._is_target:
-            node_type = 'TARGET!'
-        return node_type
-        
-    def astarResult(self):
+    #def describeResult_(self):   
+    #    'Returns string describing result'
+    #    node_type = ''
+    #    if len(self._children) == 0:
+    #        node_type = 'dead-end'
+    #    elif self._is_target:
+    #        node_type = 'TARGET!'
+    #    return node_type
+    
+    def describeAstar_(self):
+        'Returns string describing A* values f = g + h'
         return '(' + str(self._g_val) + ' + ' + str(self._h_val) + ' = ' + str(self.f()) + ')'
         
     def describe(self):
-        "Returns description of a node including ancestors and outcome"
+        'Returns description of a node including ancestors and outcome'
         description = "node(" + str(self._unique_id) + "):"
         for state in self.ancestorStates():
             description += state.describe() + ', '
-        description += self._state.describe() + ' ' + self.astarResult() + ' ' + str(len(self.ancestorStates()))
+        description += self._state.describe() + ' ' + self.describeAstar_() + ' ' + str(len(self.ancestorStates()))
         return description
                     
 def getChildNodes(node, g, h):
-    '''Given a node with a state that is otherwise empty, return child nodes for all viable moves from that state'''
+    'Given a node with a state that is otherwise empty, return child nodes for all viable moves from that state'
     child_nodes = []
     for move in node._state.allowedMoves():
         new_state = node._state.applyMove(move)
