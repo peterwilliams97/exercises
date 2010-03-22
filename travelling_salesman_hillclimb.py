@@ -46,8 +46,8 @@ def doSwap(path, i, j):
 def allSwaps(path):
     'Returns list of possible swappings on path'
     r = range(num_free_cities)
-    r = [2,3,1,0] 
-    r = [3,2,0,1]
+    #r = [2,3,1,0] 
+    #r = [3,2,0,1]
     return [doSwap(path,i,j) for j in r for i in r if i > j]
     #for i in range(num_free_cities):
     #    for j in range(i+1, num_free_cities):
@@ -84,9 +84,10 @@ determinsitic = True
 
 def prob(current_val, val, temperature):
     'Returns probability of accepting val given current_val and temperature'
+    assert(temperature >= minimum_temperature)
     if val < current_val:
         return 1.0
-    elif temperature <= minimum_temperature:
+    elif temperature < minimum_temperature:
         return 0.0
     else:
         #print '$$$', current_val, val, temperature
@@ -191,10 +192,10 @@ if __name__ == '__main__':
                 best_path, rounds = anneal(start_path, max_iterations, start_temp, alpha)
                 print 'start_temp', start_temp, 'alpha', alpha, describe(start_path), '--', describe(best_path), 'in', str(rounds), 'rounds'
 
-    if False:
+    if True:
         print '------------------ Testing Simulated Annealing Params ------------------'
         start_path = all_paths[-1]  # longest path
-        temp_values = [1.0+float(x)/10.0 for x in range(20)] + range(3, 10)  + range(10, 100, 10) + range(100, 1000, 100)
+        temp_values = [0.0+float(x)/10.0 for x in range(30)] + range(3, 10)  + range(10, 100, 10) + range(100, 1000, 100)
         
         results = []
         summary_results = []
