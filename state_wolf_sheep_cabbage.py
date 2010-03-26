@@ -3,7 +3,7 @@ Describes the states of the Wolf Rabbit Cabbage
 problem and the operations on them
 '''
 
-import sys, math, copy, decimal, solver_astar
+import sys, math, copy, decimal, solver_astar, solver_backtrack
 
 # Data types
 Wolf, Rabbit, Cabbage = range(3)
@@ -11,6 +11,11 @@ Orig, Dest = range(2)
 
 # Set of all things
 all_things = set([Wolf, Rabbit, Cabbage])
+
+# string for reporting 
+names = { Wolf:"Wolf", Rabbit:"Rabbit", Cabbage:"Cabbage" }
+boat_name = { False:"", True:" |Boat"}
+direction_name = { False:'Orig->Dest', True:'Dest->Orig'}
 
 class State:
     '''Wolf Rabbit Cabbage state.
@@ -43,7 +48,7 @@ class State:
         return validState(self)
         
     def describe(self) :
-        return str(list(self._things_at_dest)) + ":" + str(self._boat_at_dest)
+        return '[' + ' '.join(map(lambda x: names[x], self.thingsOnSide(Dest))) +  boat_name[self._boat_at_dest] + ']'      
             
 class Move:
     '''A possible move. Has 1 or 2 passengers and a direction
@@ -51,14 +56,16 @@ class Move:
     def __init__(self, passengers, starting_point):
         self._passengers = passengers
         self._starting_point = starting_point
+        
+    def describe(self):
+        return '(' +  direction_name[self._starting_point] + ':' + ' '.join(map(lambda x: names[x], self._passengers)) + ')'
 
 def safeCombo(things):
     'Safe combinations of things - where no thing will eat another thing'
     return things != set([Wolf, Rabbit]) and things != set([Rabbit, Cabbage]) 
     
 def validState(state):
-    '''Tests for a valid state
-    Returns True if both sides of the river are safe'''
+    'Tests for a valid state.  Returns True if both sides of the river are safe'
     if state._boat_at_dest:
         return safeCombo(state.thingsOnSide(Orig))
     else: 
@@ -78,7 +85,7 @@ def apply(move, state):
     return new_state
             
 def subsetsOf(passengers):
-    'Return list of all 0 and 1 element subsets of passengers. These are the allowed combinations of passengeers'
+    'Return list of all 0 and 1 element subsets of passengers. These are the allowed combinations of passengers'
     subsets = [set([])]
     p = list(passengers)
     for i in range(len(p)):
@@ -104,21 +111,33 @@ def g(state):
      
 def h(state):
     'Heuristic function'
-    return 0 # node._state.numThingsLeft() # + 1 - node._state._boat_at_dest
- 
+    return 0 
                             
 if __name__ == '__main__':
     starting_state = State(set([]), Orig)
     target_state = State(set([Wolf, Rabbit, Cabbage]), Dest)
     print "starting_state =", starting_state.describe()
     print "target_state =", target_state.describe()
-    node = solver_astar.solve(starting_state, isTargetState, g, h, 20, False)
-    print '---------------------------------'
-    if node:
-        print 'Solution =', node.describe()
-    else:
-        print 'No solution'
-    
+    if False:
+        print '---------------------------------', 'A*'
+        node = solver_astar.solve(starting_state, isTargetState, g, h, 20, True)
+        print '  ---------------------------------'
+        if node:
+            print 'Solution =', node.describe()
+        else:
+            print 'No solution'
+    if True:
+        hstring = {False:'without heuristic', True:'with heuristic'}
+        for useHeuristic in (True, False):
+            print '---------------------------------', 'Back tracking', hstring[useHeuristic]
+            node = solver_backtrack.solve(starting_state, isTargetState, g, h, 20, True, useHeuristic)
+            print '---------------------------------'
+            if node:
+                print 'Solution =', node.describe()
+            else:
+                print 'No solution'
+            print '---------------------------------'
+
  
 
 

@@ -104,7 +104,7 @@ def solve(starting_state, isTargetState, g, h, max_depth, verb):
  #   priority_queue.sort(key = sortFunc)  
 
     while (len(priority_queue) > 0):
-        if verbose:
+        if verbose and False:
             print 'priority_queue', [(n._unique_id, n.f()) for n in priority_queue]
         node = heappop(priority_queue)
         if node._unique_id not in visited:

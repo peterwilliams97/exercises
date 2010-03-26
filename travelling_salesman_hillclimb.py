@@ -39,6 +39,7 @@ def describe(path):
     
 def doSwap(path, i, j):
     'Returns copy of path with ith and jth elements swapped'
+    #print str(path), i, j
     copy = path[:]
     copy[i],copy[j] = copy[j],copy[i]
     return copy
@@ -55,15 +56,19 @@ def allSwaps(path):
             
 def bestNeighboringPath(path):
     'Returns shortest path that is one swap away from path'
-    shortest_path = path
-    shortest_distance = pathLength(path)
-    all_swaps = allSwaps(path)
-    for swap in all_swaps:
-        distance = pathLength(swap)
-        # print ' swap =', describe(swap)
-        if distance < shortest_distance:
-            shortest_path = swap
-            shortest_distance = distance
+    all_paths = [path] + allSwaps(path)
+    if False:
+        shortest_path = min(map(lambda path: [path, pathLength(path)], all_paths))
+    if True:
+        shortest_path = path
+        shortest_distance = pathLength(path)
+        all_swaps = allSwaps(path)
+        for swap in all_swaps:
+            distance = pathLength(swap)
+            # print ' swap =', describe(swap)
+            if distance < shortest_distance:
+                shortest_path = swap
+                shortest_distance = distance
     return shortest_path
     
             
