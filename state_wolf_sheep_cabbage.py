@@ -44,8 +44,12 @@ class State:
     def applyMove(self, move):
         return apply(move, self)
         
-    def isValid(self):
-        return validState(self)
+  #  def isValid(self):
+   #     return validState(self)
+        
+    def isValidMove(self, move):
+        return validState(apply(move, self))
+
         
     def describe(self) :
         return '[' + ' '.join(map(lambda x: names[x], self.thingsOnSide(Dest))) +  boat_name[self._boat_at_dest] + ']'      
@@ -118,7 +122,7 @@ if __name__ == '__main__':
     target_state = State(set([Wolf, Rabbit, Cabbage]), Dest)
     print "starting_state =", starting_state.describe()
     print "target_state =", target_state.describe()
-    if False:
+    if True:
         print '---------------------------------', 'A*'
         node = solver_astar.solve(starting_state, isTargetState, g, h, 20, True)
         print '  ---------------------------------'
@@ -126,7 +130,8 @@ if __name__ == '__main__':
             print 'Solution =', node.describe()
         else:
             print 'No solution'
-    if True:
+        print '---------------------------------'
+    if False:
         hstring = {False:'without heuristic', True:'with heuristic'}
         for useHeuristic in (True, False):
             print '---------------------------------', 'Back tracking', hstring[useHeuristic]

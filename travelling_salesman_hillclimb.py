@@ -24,7 +24,7 @@ edges = { (A,B):7, (A,C):6,  (A,D):10, (A,E):13,
 num_free_cities = len(free_cities)
     
 def getEdgeDistance(city1, city2):
-    'Return distance between city1 and city2'
+    'Returns distance between city1 and city2'
     assert(city1 != city2)
     keys = [key for key in edges.keys() if city1 in key and city2 in key]
     return edges[keys[0]] 
@@ -39,7 +39,6 @@ def describe(path):
     
 def doSwap(path, i, j):
     'Returns copy of path with ith and jth elements swapped'
-    #print str(path), i, j
     copy = path[:]
     copy[i],copy[j] = copy[j],copy[i]
     return copy
@@ -47,12 +46,8 @@ def doSwap(path, i, j):
 def allSwaps(path):
     'Returns list of possible swappings on path'
     r = range(num_free_cities)
-    #r = [2,3,1,0] 
-    #r = [3,2,0,1]
     return [doSwap(path,i,j) for j in r for i in r if i > j]
-    #for i in range(num_free_cities):
-    #    for j in range(i+1, num_free_cities):
-    #        yield doSwap(path, i, j)
+    
             
 def bestNeighboringPath(path):
     'Returns shortest path that is one swap away from path'
@@ -65,7 +60,6 @@ def bestNeighboringPath(path):
         all_swaps = allSwaps(path)
         for swap in all_swaps:
             distance = pathLength(swap)
-            # print ' swap =', describe(swap)
             if distance < shortest_distance:
                 shortest_path = swap
                 shortest_distance = distance
@@ -81,7 +75,6 @@ def hillclimb(start_path, max_iterations):
         if new_path == path:        # top of hill
             break
         path = new_path
-        #print 'path =', describe(path), ', iterations =', i
     return (path, i)
    
 minimum_temperature = 0.1    

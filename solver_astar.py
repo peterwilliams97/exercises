@@ -81,10 +81,11 @@ def getChildNodes(node, g, h):
     'Given a node with a state that is otherwise empty, return child nodes for all viable moves from that state'
     child_nodes = []
     for move in node._state.allowedMoves():
-        new_state = node._state.applyMove(move)
-        if new_state.isValid() and not node.ancestorsContain(new_state):
-            new_node = Node(node, new_state, g, h)
-            child_nodes.append(new_node)
+        if node._state.isValidMove(move):
+            new_state = node._state.applyMove(move)
+            if  not node.ancestorsContain(new_state):
+                new_node = Node(node, new_state, g, h)
+                child_nodes.append(new_node)
     # print 'child_nodes', [(n._unique_id, n._state.describe()) for n in child_nodes]
     return child_nodes
          

@@ -87,10 +87,9 @@ def getChildNodes(node, g, h, useHeuristic):
     'Given a node with a state that is otherwise empty, return child nodes for all viable moves from that state'
     child_nodes = []
     for move in node._state.allowedMoves():
-        new_state = node._state.applyMove(move)
-        if new_state.isValid() :
-            new_node = Node(node, new_state, move, g, h)
-            child_nodes.append(new_node)
+        if node._state.isValidMove(move):
+            new_state = node._state.applyMove(move)
+            child_nodes.append(Node(node, new_state, move, g, h))
     if useHeuristic:
         child_nodes.sort(key = sortFunc)
     else:
