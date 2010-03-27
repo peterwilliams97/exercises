@@ -121,13 +121,30 @@ if __name__ == '__main__':
     print 'starting_state =', starting_state.describe()
     print 'target_state   =', target_state.describe()
 
-    print '---------------------------------'
-    node = solver_astar.solve(starting_state, isTargetState, g, h, 13, False)
-    print '---------------------------------'
-    if node:
-        print 'Solution =', node.describe()
-    else:
-        print 'No solution'
+    if True:
+        tgstring = {False:'tree search', True:'graph search'}
+        for graph_search in (False, True):
+            print '---------------------------------', 'A*', tgstring[graph_search]
+            node = solver_astar.solve(starting_state, isTargetState, g, h, graph_search, 20, True)
+            print '  ---------------------------------'
+            if node:
+                print 'Solution =', node.describe()
+            else:
+                print 'No solution'
+            print '---------------------------------'
+    if False:
+        hstring = {False:'without heuristic', True:'with heuristic'}
+        for use_heuristic in (True, False):
+            print '---------------------------------', 'Back tracking', hstring[use_heuristic]
+            node = solver_backtrack.solve(starting_state, isTargetState, g, h, 20, True, use_heuristic)
+            print '---------------------------------'
+            if node:
+                print 'Solution =', node.describe()
+            else:
+                print 'No solution'
+            print '---------------------------------'
+
+
         
  
 

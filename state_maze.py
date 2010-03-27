@@ -19,10 +19,11 @@ import sys, copy, solver_astar, solver_backtrack
 from math import *
 
 # Data types
-
 Up, Down, Left, Right = range(4)
 all_moves = set([Up, Down, Left, Right])
 direction_names = { Up:'U', Down:'D', Left:'L', Right:'R' }
+
+# Maze dimensions
 grid_width = 3
 grid_height = 3
 
@@ -62,11 +63,16 @@ class Move:
     def describe(self):
         return direction_names[self._direction]
 
-# Type of edge
+# Type of edge for a cell
 Horizontal, Vertical = False, True
-# Barrier element x,y,vertical
+
+# List of all barriers
+# Barrier element: x,y,vertical
+#   x,y is the cell at the left, bottom of the edge
 barriers = set([(Vertical, 1,2), (Horizontal, 1,1), (Horizontal, 2,1)])
 
+# Map of edges a move could run into
+# Direction: (Edge type, dx, dy)
 edge_delta_table = { 
     Left: (Vertical,   0, 0),
     Right:(Vertical,   1, 0),
@@ -75,6 +81,7 @@ edge_delta_table = {
 }
 
 def validMove(state, move):
+    'Returns True if move is valid'
     delta = edge_delta_table[move._direction]
     edge = (delta[0], state._x + delta[1], state._y + delta[2])
     return edge not in barriers
@@ -140,27 +147,28 @@ if __name__ == '__main__':
     print "starting_state =", starting_state.describe()
     print "target_state =", target_state.describe()
     if True:
-        print '---------------------------------', 'A*'
-        node = solver_astar.solve(starting_state, isTargetState, g, h, 20, True)
-        print ' ---------------------------------'
-        if node:
-            print 'Solution =', node.describe()
-            drawNode(node)
-        else:
-            print 'No solution'
-        print '---------------------------------'
-    if True:
-        hstring = {False:'without heuristic', True:'with heuristic'}
-        for useHeuristic in (True, False):
-            print '---------------------------------', 'Back tracking', hstring[useHeuristic]
-            node = solver_backtrack.solve(starting_state, isTargetState, g, h, 20, True, useHeuristic)
-            print '---------------------------------'
+        tgstring = {False:'tree search', True:'graph search'}
+        for graph_search in (False, True):
+            print '---------------------------------', 'A*', tgstring[graph_search]
+            node = solver_astar.solve(starting_state, isTargetState, g, h, graph_search, 20, True)
+            print '  ---------------------------------'
             if node:
                 print 'Solution =', node.describe()
-                drawNode(node)
             else:
                 print 'No solution'
             print '---------------------------------'
+    if False:
+        hstring = {False:'without heuristic', True:'with heuristic'}
+        for use_heuristic in (True, False):
+            print '---------------------------------', 'Back tracking', hstring[use_heuristic]
+            node = solver_backtrack.solve(starting_state, isTargetState, g, h, 20, True, use_heuristic)
+            print '---------------------------------'
+            if node:
+                print 'Solution =', node.describe()
+            else:
+                print 'No solution'
+            print '---------------------------------'
+
 
  
 

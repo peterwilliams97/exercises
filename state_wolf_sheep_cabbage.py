@@ -44,14 +44,10 @@ class State:
     def applyMove(self, move):
         return apply(move, self)
         
-  #  def isValid(self):
-   #     return validState(self)
-        
     def isValidMove(self, move):
         return validState(apply(move, self))
-
         
-    def describe(self) :
+    def describe(self):
         return '[' + ' '.join(map(lambda x: names[x], self.thingsOnSide(Dest))) +  boat_name[self._boat_at_dest] + ']'      
             
 class Move:
@@ -123,19 +119,21 @@ if __name__ == '__main__':
     print "starting_state =", starting_state.describe()
     print "target_state =", target_state.describe()
     if True:
-        print '---------------------------------', 'A*'
-        node = solver_astar.solve(starting_state, isTargetState, g, h, 20, True)
-        print '  ---------------------------------'
-        if node:
-            print 'Solution =', node.describe()
-        else:
-            print 'No solution'
-        print '---------------------------------'
+        tgstring = {False:'tree search', True:'graph search'}
+        for graph_search in (False, True):
+            print '---------------------------------', 'A*', tgstring[graph_search]
+            node = solver_astar.solve(starting_state, isTargetState, g, h, graph_search, 20, True)
+            print '  ---------------------------------'
+            if node:
+                print 'Solution =', node.describe()
+            else:
+                print 'No solution'
+            print '---------------------------------'
     if False:
         hstring = {False:'without heuristic', True:'with heuristic'}
-        for useHeuristic in (True, False):
-            print '---------------------------------', 'Back tracking', hstring[useHeuristic]
-            node = solver_backtrack.solve(starting_state, isTargetState, g, h, 20, True, useHeuristic)
+        for use_heuristic in (True, False):
+            print '---------------------------------', 'Back tracking', hstring[use_heuristic]
+            node = solver_backtrack.solve(starting_state, isTargetState, g, h, 20, True, use_heuristic)
             print '---------------------------------'
             if node:
                 print 'Solution =', node.describe()

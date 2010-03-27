@@ -3,12 +3,11 @@
 
  Searches a graph based on the Node class.
  Based on http://brandon.sternefamily.net/files/astar.txt
+ 
+ See http://en.wikipedia.org/wiki/A*_search_algorithm
 '''    
-import sys, math, copy, decimal
 from heapq import *
 
-verbose = False
-    
 unique_node_id = 0
 def getUniqueNodeId():
     'Returns a unique id'
@@ -30,6 +29,9 @@ class Node:
         self._unique_id = getUniqueNodeId()
         self._g_val = g(state)
         self._h_val = h(state)
+        
+    def __eq__(self, state):
+        return self._unique_id == state._unique_id
         
     def g_(self):
         return sum(map(lambda x: x._g_val, self.ancestors()))
@@ -75,15 +77,6 @@ class Node:
                 return True
         return False
            
-    #def describeResult_(self):   
-    #    'Returns string describing result'
-    #    node_type = ''
-    #    if len(self._children) == 0:
-    #        node_type = 'dead-end'
-    #    elif self._is_target:
-    #        node_type = 'TARGET!'
-    #    return node_type
-    
     def describeAstar_(self):
         'Returns string describing A* values f = g + h'
         return '(' + pretty(self.g_()) + ' + ' + pretty(self._h_val) + ' = ' + pretty(self.f()) + ')'
@@ -95,55 +88,58 @@ class Node:
             description += state.describe() + ', '
         description += self._state.describe() + ' ' + self.describeAstar_() + ' ' + str(len(self.ancestorStates()))
         return description
-                    
+  
+def sortFunc(node):
+    return node.f()
+                                          
 def getChildNodes(node, g, h):
     'Given a node with a state that is otherwise empty, return child nodes for all viable moves from that state'
     child_nodes = []
-   # print 'allowed moves =', [move.describe() for  move in node._state.allowedMoves()]
     for move in node._state.allowedMoves():
         if node._state.isValidMove(move):
             new_state = node._state.applyMove(move)
             if  not node.ancestorsContain(new_state):
                 new_node = Node(node, new_state, g, h)
                 child_nodes.append(new_node)
-    # print 'child_nodes', [(n._unique_id, n._state.describe()) for n in child_nodes]
+    child_nodes.sort(key = sortFunc)
     return child_nodes
          
-def sortFunc(node):
-    return node.f()
-
-def solve(starting_state, isTargetState, g, h, max_depth, verbose):
-    '''Find A* solution to path from starting_state to target_state with path-cost function g()
-       and heuristic function h()'''
-    
+def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose):
+    '''Find A* solution to path from starting_state to state:isTargetState(state) returns Treu with path-cost function g()
+       and heuristic function h()
+       graph_search: False => tree search, True => graph search
+       max_depth: max tree depth to search to
+       verbose: set True for richer logging
+       '''
     priority_queue = []         # priority queue to store nodes
     heapify(priority_queue)
-    visited = set([])           # set to store previously visited nodes
-
-    heappush(priority_queue, Node(None, starting_state, g, h))  # put the initial node on the queue
- #   priority_queue.sort(key = sortFunc)  
+    visited = set([])           # set to store previously visited nodes (the 'closed' set
+    closed_set = []             # same as visited but stores whole nodes instead of only unique_id
+    
+    heappush(priority_queue, Node(None, starting_state, g, h))  # put the initial node on the queue ('open' set)
 
     while (len(priority_queue) > 0):
-        if verbose and False:
-            print '   priority_queue =', [(n._state.describe(), pretty(n.f())) for n in priority_queue]
+        if verbose:
+            print '    open set   =', [(n._state.describe(), pretty(n.f())) for n in priority_queue] # The 'open' set
+            print '    closed set =', [(n._state.describe(), pretty(n.f())) for n in closed_set]     
+
         node = heappop(priority_queue)
         if node._unique_id not in visited:
+            closed_set.append(node)
+
+        if node._unique_id not in visited or graph_search:
+            visited = visited | set([node._unique_id])
             if verbose:
                 print node.describe()
             if isTargetState(node._state):
                 return node
             elif node.depth() < max_depth:
                 children = getChildNodes(node, g, h)
-                #print 'children =', [n._state.describe()  for n in children]
+                if verbose and False:
+                    print '    children    =', [(n._state.describe(), pretty(n.f())) for n in children] # The 'open' set
                 for child in children:
-                    child._parent = node
                     heappush(priority_queue, child)
-                    visited = visited | set([node._unique_id])
-                   # print '--priority_queue', [n._unique_id for n in priority_queue]
                 priority_queue.sort(key = sortFunc)  # keep less costly nodes at the front
                      
     return None             # entire tree searched, no goal state found
-
-  
-
-
+    
