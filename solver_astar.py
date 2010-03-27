@@ -22,6 +22,7 @@ def pretty(n):
 class Node:
     'Node in the search graph'
     def __init__(self, parent, state, g, h):
+        'Create a node with parent and state. g() is step-cost function. h() is path heuristic'
         self._state = state
         self._parent = parent
         self._children = []
@@ -34,11 +35,11 @@ class Node:
         return self._unique_id == state._unique_id
         
     def g_(self):
+        'Path cost = sum of step costs'
         return sum(map(lambda x: x._g_val, self.ancestors()))
         
     def f(self):
         'f() in the A* algo'
-       # return self._g_val + self._h_val
         return self.g_() + self._h_val
         
     def _describe(self):
@@ -57,14 +58,15 @@ class Node:
         
     def ancestorStates(self):
         "Returns list of states of this node's ancestors not including itself"
-        ancestors = []
-        node = self._parent
-        while node:
-            ancestors.append(node._state)
-            node = node._parent
-        ancestors.reverse()
-        return ancestors 
-        # return map(lambda x: x._state, self.ancestors())
+        if False:
+            ancestors = []
+            node = self._parent
+            while node:
+                ancestors.append(node._state)
+                node = node._parent
+            ancestors.reverse()
+            return ancestors 
+        return map(lambda x: x._state, self.ancestors())
         
     def depth(self):
         'Returns depth of node in graph'
