@@ -15,7 +15,8 @@ wall.
 
 '''
 
-import sys, math, copy, solver_astar, solver_backtrack
+import sys, copy, solver_astar, solver_backtrack
+from math import *
 
 # Data types
 
@@ -24,8 +25,6 @@ all_moves = set([Up, Down, Left, Right])
 direction_names = { Up:'U', Down:'D', Left:'L', Right:'R' }
 grid_width = 3
 grid_height = 3
-
-
 
 
 class State:
@@ -49,10 +48,10 @@ class State:
         return validState(self)
         
     def isValidMove(self, move):
-            return validMove(self, move)
+        return validMove(self, move)
         
     def describe(self) :
-        return '[' + str(self._x) + ',' + str(self._y) + ']'      
+        return '[' + str(self._x+1) + ',' + str(self._y+1) + ']'      
             
 class Move:
     '''A possible move. Has 1 or 2 passengers and a direction
@@ -96,14 +95,15 @@ def apply(move, state):
 def possibleMoves(state):
     'Return list of all possible moves for state, some of which may be invalid'
     moves = []
-    if not state._x == 0:
+    if state._x > 0:
         moves.append(Move(Left))
-    if not state._x == grid_width:
+    if state._x < grid_width -1:
         moves.append(Move(Right))
-    if not state._y == 0:
+    if state._y > 0:
         moves.append(Move(Down))
-    if not state._y == grid_height:
+    if state._y < grid_height -1:
         moves.append(Move(Up))
+    #print 'possibleMoves for', state.describe(), '=', [m.describe() for m in moves] 
     return moves
 
  
@@ -111,18 +111,17 @@ def isTargetState(state):
     return state == target_state 
     
 def g(state):
-    'Path-cost function'
-    return state._x*state._x + state._y*state._y 
+    'Path-cost function. Returns step cost for last state'
+    return 1
      
 def h(state):
     'Heuristic function'
-    return 0 
+    return sqrt((state._x-target_state._x)**2 + (state._y-target_state._y)**2) 
+    #return (state._x-target_state._x)*(state._x-target_state._x) + (state._y-target_state._y)*(state._y-target_state._y) 
  
 def drawNode(node):
+    'Draw as a 3x3 grid with numbers showing order in which squares were visited'
     ancestors = node.ancestorStates() + [node._state]
-    for i in range(len(ancestors)):
-        state = ancestors[i]
-     #   print state._x,  state._y
     for y in range(grid_height-1, -1, -1):
         line = ''
         for x in range(grid_width):
@@ -143,14 +142,13 @@ if __name__ == '__main__':
     if True:
         print '---------------------------------', 'A*'
         node = solver_astar.solve(starting_state, isTargetState, g, h, 20, True)
-        print '  ---------------------------------'
+        print ' ---------------------------------'
         if node:
             print 'Solution =', node.describe()
+            drawNode(node)
         else:
             print 'No solution'
-        drawNode(node)
         print '---------------------------------'
-        
     if True:
         hstring = {False:'without heuristic', True:'with heuristic'}
         for useHeuristic in (True, False):
@@ -159,9 +157,9 @@ if __name__ == '__main__':
             print '---------------------------------'
             if node:
                 print 'Solution =', node.describe()
+                drawNode(node)
             else:
                 print 'No solution'
-            drawNode(node)
             print '---------------------------------'
 
  

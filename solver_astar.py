@@ -16,6 +16,10 @@ def getUniqueNodeId():
     unique_node_id = unique_node_id + 1
     return unique_node_id
     
+def pretty(n):
+    'Pretty string for number n'
+    return str(round(n, 2))
+    
 class Node:
     'Node in the search graph'
     def __init__(self, parent, state, g, h):
@@ -26,14 +30,28 @@ class Node:
         self._unique_id = getUniqueNodeId()
         self._g_val = g(state)
         self._h_val = h(state)
-         
+        
+    def g_(self):
+        return sum(map(lambda x: x._g_val, self.ancestors()))
+        
     def f(self):
         'f() in the A* algo'
-        return self._g_val + self._h_val
+       # return self._g_val + self._h_val
+        return self.g_() + self._h_val
         
     def _describe(self):
-        'Returns sgtring description of node. Assumes state has describe() function that does same'
+        'Returns string description of node. Assumes state has describe() function that does same'
         return self._state.describe() + ' - c = ' + str(len(self._children)) # + " " + str(self._visited) 
+     
+    def ancestors(self):
+        "Returns list of this node's ancestors not including itself"
+        ancestors = []
+        node = self._parent
+        while node:
+            ancestors.append(node)
+            node = node._parent
+        ancestors.reverse()
+        return ancestors 
         
     def ancestorStates(self):
         "Returns list of states of this node's ancestors not including itself"
@@ -44,13 +62,14 @@ class Node:
             node = node._parent
         ancestors.reverse()
         return ancestors 
+        # return map(lambda x: x._state, self.ancestors())
         
     def depth(self):
         'Returns depth of node in graph'
         return len(self.ancestorStates())
         
     def ancestorsContain(self, state):
-        'Returns true if ancestorStates() contain state'
+        'Returns True if ancestorStates() contain state'
         for a in self.ancestorStates():
             if a == state:
                 return True
@@ -67,7 +86,7 @@ class Node:
     
     def describeAstar_(self):
         'Returns string describing A* values f = g + h'
-        return '(' + str(self._g_val) + ' + ' + str(self._h_val) + ' = ' + str(self.f()) + ')'
+        return '(' + pretty(self.g_()) + ' + ' + pretty(self._h_val) + ' = ' + pretty(self.f()) + ')'
         
     def describe(self):
         'Returns description of a node including ancestors and outcome'
@@ -80,6 +99,7 @@ class Node:
 def getChildNodes(node, g, h):
     'Given a node with a state that is otherwise empty, return child nodes for all viable moves from that state'
     child_nodes = []
+   # print 'allowed moves =', [move.describe() for  move in node._state.allowedMoves()]
     for move in node._state.allowedMoves():
         if node._state.isValidMove(move):
             new_state = node._state.applyMove(move)
@@ -92,11 +112,10 @@ def getChildNodes(node, g, h):
 def sortFunc(node):
     return node.f()
 
-def solve(starting_state, isTargetState, g, h, max_depth, verb):
+def solve(starting_state, isTargetState, g, h, max_depth, verbose):
     '''Find A* solution to path from starting_state to target_state with path-cost function g()
        and heuristic function h()'''
     
-    verbose = verb
     priority_queue = []         # priority queue to store nodes
     heapify(priority_queue)
     visited = set([])           # set to store previously visited nodes
@@ -106,7 +125,7 @@ def solve(starting_state, isTargetState, g, h, max_depth, verb):
 
     while (len(priority_queue) > 0):
         if verbose and False:
-            print 'priority_queue', [(n._unique_id, n.f()) for n in priority_queue]
+            print '   priority_queue =', [(n._state.describe(), pretty(n.f())) for n in priority_queue]
         node = heappop(priority_queue)
         if node._unique_id not in visited:
             if verbose:
@@ -115,7 +134,7 @@ def solve(starting_state, isTargetState, g, h, max_depth, verb):
                 return node
             elif node.depth() < max_depth:
                 children = getChildNodes(node, g, h)
-                #print 'children', [n._unique_id for n in children]
+                #print 'children =', [n._state.describe()  for n in children]
                 for child in children:
                     child._parent = node
                     heappush(priority_queue, child)

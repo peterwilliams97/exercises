@@ -14,6 +14,10 @@ def getUniqueNodeId():
     unique_node_id = unique_node_id + 1
     return unique_node_id
     
+def pretty(n):
+    'Pretty string for number n'
+    return str(round(n, 2))    
+    
 class Node:
     'Node in the search graph'
     def __init__(self, parent, state, move, g, h):
@@ -60,7 +64,7 @@ class Node:
     
     def describeH(self):
         'Returns string describing heuristic value'
-        return str(self.f()) 
+        return pretty(self.f()) 
         
     def describeMove(self):
         if self._move:
