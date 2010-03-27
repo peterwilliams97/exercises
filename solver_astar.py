@@ -31,9 +31,6 @@ class Node:
         self._g_val = g(state)
         self._h_val = h(state)
         
-    def __eq__(self, state):
-        return self._unique_id == state._unique_id
-        
     def g_(self):
         'Path cost = sum of step costs'
         return sum(map(lambda x: x._g_val, self.ancestors()))
@@ -58,14 +55,6 @@ class Node:
         
     def ancestorStates(self):
         "Returns list of states of this node's ancestors not including itself"
-        if False:
-            ancestors = []
-            node = self._parent
-            while node:
-                ancestors.append(node._state)
-                node = node._parent
-            ancestors.reverse()
-            return ancestors 
         return map(lambda x: x._state, self.ancestors())
         
     def depth(self):
