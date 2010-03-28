@@ -26,7 +26,6 @@ class Node:
         self._state = state
         self._parent = parent
         self._children = []
-        self._is_target = False
         self._unique_id = getUniqueNodeId()
         self._g_val = g(state)
         self._h_val = h(state)
@@ -59,7 +58,7 @@ class Node:
         
     def depth(self):
         'Returns depth of node in graph'
-        return len(self.ancestorStates())
+        return len(self.ancestors())
         
     def ancestorsContain(self, state):
         'Returns True if ancestorStates() contain state'
@@ -74,25 +73,17 @@ class Node:
         
     def describe(self):
         'Returns description of a node including ancestors and outcome'
-        description = "node(" + str(self._unique_id) + "):"
-        for state in self.ancestorStates():
-            description += state.describe() + ', '
-        description += self._state.describe() + ' ' + self.describeAstar_() + ' ' + str(len(self.ancestorStates()))
-        return description
-  
-def sortFunc(node):
-    return node.f()
-                                          
+        return 'node(' + str(self._unique_id) + '):' + ', '.join(map(lambda x: x.describe(), self.ancestorStates())) \
+                      + self._state.describe() + ' ' + self.describeAstar_() + ' ' + str(self.depth())
+         
 def getChildNodes(node, g, h):
     'Given a node with a state that is otherwise empty, return child nodes for all viable moves from that state'
     child_nodes = []
     for move in node._state.allowedMoves():
         if node._state.isValidMove(move):
             new_state = node._state.applyMove(move)
-            if  not node.ancestorsContain(new_state):
-                new_node = Node(node, new_state, g, h)
-                child_nodes.append(new_node)
-    child_nodes.sort(key = sortFunc)
+            if not node.ancestorsContain(new_state):
+                child_nodes.append(Node(node, new_state, g, h))
     return child_nodes
          
 def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose):
@@ -101,36 +92,30 @@ def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose)
        graph_search: False => tree search, True => graph search
        max_depth: max tree depth to search to
        verbose: set True for richer logging
-       '''
+    '''
     priority_queue = []         # priority queue to store nodes
     heapify(priority_queue)
-    visited = set([])           # set to store previously visited nodes (the 'closed' set
+    visited = set([])           # set to store previously visited nodes (the 'closed' set)
     closed_set = []             # same as visited but stores whole nodes instead of only unique_id
     
     heappush(priority_queue, Node(None, starting_state, g, h))  # put the initial node on the queue ('open' set)
 
-    while (len(priority_queue) > 0):
+    while len(priority_queue) > 0:
         if verbose:
-            print '    open set   =', [(n._state.describe(), pretty(n.f())) for n in priority_queue] # The 'open' set
-            print '    closed set =', [(n._state.describe(), pretty(n.f())) for n in closed_set]     
-
+            print '    open set   =', [(n._state.describe(), pretty(n.f())) for n in priority_queue] 
+            print '    closed set =', [(n._state.describe(), pretty(n.f())) for n in closed_set]
+                
         node = heappop(priority_queue)
         if node._unique_id not in visited:
             closed_set.append(node)
-
-        if node._unique_id not in visited or graph_search:
+        if graph_search or node._unique_id not in visited:
             visited = visited | set([node._unique_id])
             if verbose:
                 print node.describe()
             if isTargetState(node._state):
                 return node
             elif node.depth() < max_depth:
-                children = getChildNodes(node, g, h)
-                if verbose and False:
-                    print '    children    =', [(n._state.describe(), pretty(n.f())) for n in children] # The 'open' set
-                for child in children:
-                    heappush(priority_queue, child)
-                priority_queue.sort(key = sortFunc)  # keep less costly nodes at the front
-                     
+                map(lambda n: heappush(priority_queue, n), getChildNodes(node, g, h))    
+                priority_queue.sort(key = lambda n: n.f())  # keep less costly nodes at the front
     return None             # entire tree searched, no goal state found
     
