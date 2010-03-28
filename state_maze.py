@@ -98,7 +98,6 @@ def apply(move, state):
     delta = move_table[move._direction]
     return State(state._x + delta[0], state._y + delta[1])
             
-    
 def possibleMoves(state):
     'Return list of all possible moves for state, some of which may be invalid'
     moves = []
@@ -110,22 +109,19 @@ def possibleMoves(state):
         moves.append(Move(Down))
     if state._y < grid_height -1:
         moves.append(Move(Up))
-    #print 'possibleMoves for', state.describe(), '=', [m.describe() for m in moves] 
     return moves
 
- 
 def isTargetState(state):
     return state == target_state 
     
 def g(state):
-    'Path-cost function. Returns step cost for last state'
+    'Returns step cost for last state'
     return 1
      
 def h(state):
     'Heuristic function'
     return sqrt((state._x-target_state._x)**2 + (state._y-target_state._y)**2) 
-    #return (state._x-target_state._x)*(state._x-target_state._x) + (state._y-target_state._y)*(state._y-target_state._y) 
- 
+     
 def drawNode(node):
     'Draw as a 3x3 grid with numbers showing order in which squares were visited'
     ancestors = node.ancestorStates() + [node._state]
@@ -150,8 +146,8 @@ if __name__ == '__main__':
         tgstring = {False:'tree search', True:'graph search'}
         for graph_search in (False, True):
             print '---------------------------------', 'A*', tgstring[graph_search]
-            node = solver_astar.solve(starting_state, isTargetState, g, h, graph_search, 20, True)
-            print '  ---------------------------------'
+            node = solver_astar.solve(starting_state, isTargetState, g, h, graph_search, 20, False)
+            print '---------------------------------'
             if node:
                 print 'Solution =', node.describe()
             else:

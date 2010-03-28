@@ -14,7 +14,11 @@ def getUniqueNodeId():
     global unique_node_id
     unique_node_id = unique_node_id + 1
     return unique_node_id
-    
+
+def resetUniqueId():
+    global unique_node_id
+    unique_node_id = 0
+        
 def pretty(n):
     'Pretty string for number n'
     return str(round(n, 2))
@@ -74,7 +78,7 @@ class Node:
     def describe(self):
         'Returns description of a node including ancestors and outcome'
         return 'node(' + str(self._unique_id) + '):' + ', '.join(map(lambda x: x.describe(), self.ancestorStates())) \
-                      + self._state.describe() + ' ' + self.describeAstar_() + ' ' + str(self.depth())
+                      + ', ' + self._state.describe() + ' ' + self.describeAstar_() + ' ' + str(self.depth())
          
 def getChildNodes(node, g, h):
     'Given a node with a state that is otherwise empty, return child nodes for all viable moves from that state'
@@ -97,6 +101,7 @@ def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose)
     heapify(priority_queue)
     visited = set([])           # set to store previously visited nodes (the 'closed' set)
     closed_set = []             # same as visited but stores whole nodes instead of only unique_id
+    resetUniqueId()
     
     heappush(priority_queue, Node(None, starting_state, g, h))  # put the initial node on the queue ('open' set)
 
@@ -112,10 +117,10 @@ def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose)
             visited = visited | set([node._unique_id])
             if verbose:
                 print node.describe()
-            if isTargetState(node._state):
+            if isTargetState(node._state):      # Found goal state
                 return node
             elif node.depth() < max_depth:
                 map(lambda n: heappush(priority_queue, n), getChildNodes(node, g, h))    
                 priority_queue.sort(key = lambda n: n.f())  # keep less costly nodes at the front
-    return None             # entire tree searched, no goal state found
+    return None                 # entire tree searched, no goal state found
     
