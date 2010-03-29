@@ -90,56 +90,21 @@ class Node:
     def describe(self):
         'Returns description of a node including ancestors and outcome'
         return 'node(' + str(self._unique_id) + '):' + ', '.join(map(lambda x: x.describe(), self.ancestorStates())) \
-                      + ', ' + self._state.describe() + ' ' + self.describeAstar_() + ' ' + str(self.depth()) # \
-                     # + ':' + ','.join(map(lambda x: str(x._g_step_val), self.ancestors()))
+                      + ', ' + self._state.describe() + ' ' + self.describeAstar_() + ' ' + str(self.depth())
+                    
          
 def getNeighborNodes(node, g, h, gpath):
     'Given a node with a state that is otherwise empty, return neighbor nodes for all viable moves from that state'
     child_nodes = []
-    #print '    allowedMoves   =', node.describe(), '***', [move.describe() for move in node._state.allowedMoves()]
     for move in node._state.allowedMoves():
-       # print '        isValidMove', node._state.describe(), move.describe(), node._state.isValidMove(move)
         if node._state.isValidMove(move):
             new_state = node._state.applyMove(move)
-            #print '        ancestorsContains', new_state.describe()
             if not node.ancestorsContain(new_state):
                 child_nodes.append(Node(node, new_state, g, h, gpath))
-    #print '    child_nodes   =',  [c.describe() for c in child_nodes]            
     return child_nodes
          
-def solve0(starting_state, isTargetState, g, h, graph_search, max_depth, verbose):
-    '''Find A* solution to path from starting_state to state:isTargetState(state) returns Treu with path-cost function g()
-       and heuristic function h()
-       graph_search: False => tree search, True => graph search
-       max_depth: max tree depth to search to
-       verbose: set True for richer logging
-    '''
-    open_set = []         # priority queue to store nodes (the 'open' set)
-    heapify(open_set)
-    visited = set([])           # set to store previously visited nodes (the 'closed' set)
-    closed_set = []             # same as visited but stores whole nodes instead of only unique_id
-    
-    resetUniqueId()
-    
-    heappush(open_set, Node(None, starting_state, g, h, gpath))  # put the initial node on the queue 
-
-    while len(open_set) > 0:
-        if verbose:
-            print '    open set   =', [(n._state.describe(), pretty(n.f())) for n in open_set] 
-            print '    closed set =', [(n._state.describe(), pretty(n.f())) for n in closed_set]
-        node = heappop(open_set)
-        if node._unique_id not in visited:
-            closed_set.append(node)
-        if graph_search or node._unique_id not in visited:
-            visited = visited | set([node._unique_id])
-            if verbose:
-                print node.describe()
-            if isTargetState(node._state):      # Found goal state
-                return node
-            elif node.depth() < max_depth:
-                map(lambda n: heappush(open_set, n), getNeighborNodes(node, g, h))    
-                open_set.sort(key = lambda n: n.f())  # keep less costly nodes at the front
-    return None                 # entire tree searched, no goal state found
+def printNodesInList(name, alist, max_displayed): 
+    print name + ':', len(alist), [(n._unique_id, n._state.describe(), pretty(n.f())) for i,n in enumerate(alist) if i < 5], '+', max(len(alist) - 5, 0), 'others'
     
 def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose, gpath = None):
     '''Find A* solution to path from starting_state to state:isTargetState(state) 
@@ -168,10 +133,10 @@ def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose,
   
     while len(open_set) > 0:
         if verbose:
-            print 'open set   =', [(n._unique_id, n._state.describe(), pretty(n.f())) for i,n in enumerate(open_set) if i < 5], '+', max(len(open_set) - 5, 0), 'others'
+            printNodesInList('open set  ', open_set, 5)
             if graph_search:
-                print 'closed set =', [(n._unique_id, n._state.describe(), pretty(n.f())) for  i,n in enumerate(closed_set) if i < 5], '+', max(len(closed_set) - 5, 0), 'others'
-
+                printNodesInList('closed set', closed_set, 5)
+     
         node = heappop(open_set)
         if verbose:
             print '     ' * (node.depth() + 1), node.describe()

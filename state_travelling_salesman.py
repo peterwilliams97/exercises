@@ -75,7 +75,6 @@ class State:
         
     def describe(self):
         return 'A' + ''.join(map(lambda c: chr(c+ord('A')), self._cities_visited)) + ':' + str(gpath(self))
-       # return str(self._cities_visited)
    
         
 class Move:
@@ -93,7 +92,6 @@ def apply(move, state):
     assert(state.getCurrentCity() in move._edge)
     new_state = State(state._cities_visited)
     new_state._cities_visited.append(otherCity(move._edge, new_state.getCurrentCity()))
-  #  print 'apply', str(move), state.describe(), ' ->', new_state.describe()
     return new_state
         
 def isTargetState(state):
@@ -107,11 +105,7 @@ def gpath(state):
     if len(state._cities_visited) > 0:
         for city in state._cities_visited:
             distance += getEdgeDistance(last_city, city)
-            #if len(state._cities_visited) > 3:
-            #    print last_city, city, 'd =',  getEdgeDistance(last_city, city), 't =', distance
             last_city = city
-    #if len(state._cities_visited) > 3:
-    #    xcvb
     return distance
      
 def h(state):
