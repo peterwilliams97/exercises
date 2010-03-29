@@ -45,6 +45,9 @@ class State:
     
     def __init__(self, cities_visited):
         self._cities_visited = cities_visited[:]
+        
+    def signature(self):
+        return tuple(self._cities_visited)
                
     def __eq__(self, state):
         return self._cities_visited == state._cities_visited 
@@ -70,9 +73,13 @@ class State:
     def applyMove(self, move):
         return apply(move, self)
         
-    def isValid(self):
-        'A state is valid if it contains no duplicates'
-        return len(set(self._cities_visited)) == len(self._cities_visited)
+   # def isValid(self):
+   #     'A state is valid if it contains no duplicates'
+   #     return len(set(self._cities_visited)) == len(self._cities_visited)
+        
+    def isValidMove(self, move):
+        'Move is valid if state moved to contains no duplicates'
+        return len(set(apply(move,self)._cities_visited)) == len(self._cities_visited)    
         
     def describe(self):
         return str(self._cities_visited)

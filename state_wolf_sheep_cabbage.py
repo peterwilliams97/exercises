@@ -13,8 +13,8 @@ Orig, Dest = range(2)
 all_things = set([Wolf, Rabbit, Cabbage])
 
 # string for reporting 
-names = { Wolf:"Wolf", Rabbit:"Rabbit", Cabbage:"Cabbage" }
-boat_name = { False:"", True:" |Boat"}
+names = { Wolf:'Wolf', Rabbit:'Rabbit', Cabbage:'Cabbage'}
+boat_name = { False:'', True:' |Boat'}
 direction_name = { False:'Orig->Dest', True:'Dest->Orig'}
 
 class State:
@@ -26,8 +26,11 @@ class State:
         self._things_at_dest = things_at_dest
         self._boat_at_dest = boat
         
+    def signature(self):
+        return (frozenset(self._things_at_dest), self._boat_at_dest)
+        
     def __eq__(self, state):
-        return self._things_at_dest == state._things_at_dest and self._boat_at_dest == state._boat_at_dest
+        return self.signature() == state.signature()
         
     def thingsOnSide(self, side):
         if side == Orig:
@@ -106,12 +109,13 @@ def isTargetState(state):
     return state == target_state 
     
 def g(state):
-    'Path-cost function'
-    return state.numThingsLeft() 
+    'Step cost function'
+    return 0
      
 def h(state):
     'Heuristic function'
-    return 0 
+    return 0  # http://en.wikipedia.org/wiki/Consistent_heuristic
+    return state.numThingsLeft()  
                             
 if __name__ == '__main__':
     starting_state = State(set([]), Orig)
@@ -122,14 +126,14 @@ if __name__ == '__main__':
         tgstring = {False:'tree search', True:'graph search'}
         for graph_search in (False, True):
             print '---------------------------------', 'A*', tgstring[graph_search]
-            node = solver_astar.solve(starting_state, isTargetState, g, h, graph_search, 20, True)
+            node = solver_astar.solve(starting_state, isTargetState, None, h, graph_search, 20, True, g)
             print '  ---------------------------------'
             if node:
                 print 'Solution =', node.describe()
             else:
                 print 'No solution'
             print '---------------------------------'
-    if False:
+    if True:
         hstring = {False:'without heuristic', True:'with heuristic'}
         for use_heuristic in (True, False):
             print '---------------------------------', 'Back tracking', hstring[use_heuristic]
