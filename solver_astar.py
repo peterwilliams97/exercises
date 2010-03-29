@@ -104,7 +104,7 @@ def getNeighborNodes(node, g, h, gpath):
     return child_nodes
          
 def printNodesInList(name, alist, max_displayed): 
-    print name + ':', len(alist), [(n._unique_id, n._state.describe(), pretty(n.f())) for i,n in enumerate(alist) if i < 5], '+', max(len(alist) - 5, 0), 'others'
+    print name + ':', len(alist), [(n._unique_id, n._state.describe(), pretty(n.f())) for i,n in enumerate(alist) if i < max_displayed], '+', max(len(alist) - max_displayed, 0), 'others'
     
 def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose, gpath = None):
     '''Find A* solution to path from starting_state to state:isTargetState(state) 
