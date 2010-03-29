@@ -9,7 +9,7 @@ cities.  Starting at city #1. Find the route of minimal distance that visits eac
 the cities only once and returns to city #1.
 '''
 
-import sys, math, copy, decimal, solver_astar
+import  math, copy, solver_astar, solver_backtrack
 
 # Map nodes
 A, B, C, D, E = range(ord('E') - ord('A') + 1)
@@ -85,7 +85,8 @@ class Move:
         self._edge = edge
         
     def describe(self):
-        return str(self._edge)
+        return ''.join(map(lambda c: chr(c+ord('A')), self._edge))
+      
         
 def apply(move, state):
     'Apply move to state'
@@ -140,7 +141,7 @@ if __name__ == '__main__':
         hstring = {False:'without heuristic', True:'with heuristic'}
         for use_heuristic in (True, False):
             print '---------------------------------', 'Back tracking', hstring[use_heuristic]
-            node = solver_backtrack.solve(starting_state, isTargetState, g, h, 20, True, use_heuristic)
+            node = solver_backtrack.solve(starting_state, isTargetState, gpath, h, 20, True, use_heuristic)
             print '---------------------------------'
             if node:
                 print 'Solution =', node.describe()

@@ -78,7 +78,7 @@ class Node:
         description = ''
         for state in self.ancestorStates():
             description += state.describe() + ', '
-        description += self._state.describe() + '' + self.describeH() # + ' ' + str(len(self.ancestorStates()))
+        description += self._state.describe() + ' - ' + self.describeH() # + ' ' + str(len(self.ancestorStates()))
         return description
   
 def sortFunc(node):
@@ -126,7 +126,7 @@ def solveNode(node, isTargetState, g, h, max_depth, verbose, useHeuristic):
         if len(children) == 0:
             report(spacer, 'Dead-end')
         else:
-            possibles = 'Possible moves = ' + ', '.join(map(lambda x: x.describeMove() + '=>' + x.describeState() + x.describeH(), children))
+            possibles = 'Possible moves = ' + ', '.join(map(lambda x: x.describeMove() + '=>' + x.describeState() + ' ' + x.describeH(), children))
             print spacer + one_space, possibles
             for child in children:
                 child._parent = node
