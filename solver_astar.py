@@ -123,11 +123,11 @@ def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose,
     assert((g==None) != (gpath==None))
     resetUniqueId()
     
-    open_set = []         # priority queue to store nodes (the 'open' set)
+    open_set = []           # priority queue to store nodes (the 'open' set)
     heapify(open_set)
     if graph_search:
-        visited = set([])           # set to store previously visited node signatures (effficient version of the 'closed' set)
-        closed_set = []             # same as visited but stores whole nodes instead of only signatures
+        visited = set([])   # set to store previously visited node signatures (effficient version of the 'closed' set)
+        closed_set = []     # same as visited but stores whole nodes instead of only signatures
         
     heappush(open_set, Node(None, starting_state, g, h, gpath))  # put the initial node on the queue 
   
@@ -140,8 +140,8 @@ def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose,
         node = heappop(open_set)
         if verbose:
             print '     ' * (node.depth() + 1), node.describe()
-        if isTargetState(node._state):      # Found goal state
-            return node
+        if isTargetState(node._state):      
+            return node                     # Return goal state if found
         elif node.depth() < max_depth:
             if graph_search:
                 visited = visited | set([node._state.signature()])
@@ -155,6 +155,6 @@ def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose,
                 for neighbor in getNeighborNodes(node, g, h, gpath):
                     heappush(open_set, neighbor) 
                     assert(neighbor.f() >= node.f()) # http://en.wikipedia.org/wiki/Consistent_heuristic
-            open_set.sort(key = lambda n: n.f())  # keep less costly nodes at the front
-    return None                 # entire tree searched, goal state not found    
+            open_set.sort(key = lambda n: n.f())    # keep less costly nodes at the front
+    return None                                     # Entire tree searched, goal state not found    
     
