@@ -27,16 +27,10 @@ def otherCity(edge, current_city):
 def getEdgeDistance(city1, city2):
     'Return distance between city1 and city2'
     assert(city1 != city2)
-    keys = [key for key in edges.keys() if city1 in key and city2 in key]
-    return edges[key] 
-    
-def getCurrentCity(state):
-    'Returns the current city for state'
-    if len(state._cities_visited) == 0:
-        current_city = A
-    else:
-        current_city = state._cities_visited[-1]
-    return current_city
+    for key in edges.keys():
+        if city1 in key and city2 in key:
+            return edges[key]
+    raise NameError('Non-existent edge requested')
     
 class State:
     ''' Travelling salesman state.
@@ -50,46 +44,55 @@ class State:
         return tuple(self._cities_visited)
                
     def __eq__(self, state):
-        return self._cities_visited == state._cities_visited 
+        return self.signature() == state.signature() 
+        
+    def getCurrentCity(self):
+        'Returns the current city for state'
+        if len(self._cities_visited) == 0:
+            return A
+        else:
+            return self._cities_visited[-1]
         
     def validMove_(self, move, current_city):
         other_city = otherCity(move, current_city)
         if A in move and len(self._cities_visited) != 0 and len(self._cities_visited) != len(cities) - 1:
             return False
-        for city in self._cities_visited:
-            if other_city == city:
-                return False
-        return True
-        
+        return other_city not in self._cities_visited
+         
     def allowedMoves(self):
-        current_city = getCurrentCity(self)
+        current_city = self.getCurrentCity()
         possible_moves = [e for e in edges.keys() if current_city in e] 
-      #  print 'possible_moves', current_city, ':', str(possible_moves)
-     #   print 'possible_cities', current_city, ':', str([otherCity(e, current_city) for e in possible_moves])
-        valid_moves = [e for e in possible_moves if self.validMove_(e, current_city)]
-        #Sprint 'allowedMoves', current_city, ':', str(valid_moves)
+        valid_moves = [Move(e) for e in possible_moves if self.validMove_(e, current_city)]
         return valid_moves
         
     def applyMove(self, move):
         return apply(move, self)
         
-   # def isValid(self):
-   #     'A state is valid if it contains no duplicates'
-   #     return len(set(self._cities_visited)) == len(self._cities_visited)
-        
     def isValidMove(self, move):
         'Move is valid if state moved to contains no duplicates'
-        return len(set(apply(move,self)._cities_visited)) == len(self._cities_visited)    
+        new_state = apply(move, self)
+        return len(set(new_state._cities_visited)) == len(new_state._cities_visited)    
         
     def describe(self):
-        return str(self._cities_visited)
+        return 'A' + ''.join(map(lambda c: chr(c+ord('A')), self._cities_visited)) + ':' + str(gpath(self))
+       # return str(self._cities_visited)
+   
         
+class Move:
+    ''' Travelling salesman move.
+        A graph edge.
+    '''
+    def __init__(self, edge):
+        self._edge = edge
+        
+    def describe(self):
+        return str(self._edge)
         
 def apply(move, state):
     'Apply move to state'
-    assert(getCurrentCity(state) in move)
+    assert(state.getCurrentCity() in move._edge)
     new_state = State(state._cities_visited)
-    new_state._cities_visited.append(otherCity(move, getCurrentCity(state)))
+    new_state._cities_visited.append(otherCity(move._edge, new_state.getCurrentCity()))
   #  print 'apply', str(move), state.describe(), ' ->', new_state.describe()
     return new_state
         
@@ -97,29 +100,29 @@ def isTargetState(state):
     'Test for final state'
     return set(cities).issubset(state._cities_visited)
     
-def g(state):
-    'Path-cost function'
+def gpath(state):
+    'Path cost function'
     last_city = A
     distance = 0
     if len(state._cities_visited) > 0:
         for city in state._cities_visited:
             distance += getEdgeDistance(last_city, city)
+            #if len(state._cities_visited) > 3:
+            #    print last_city, city, 'd =',  getEdgeDistance(last_city, city), 't =', distance
             last_city = city
-  #  print 'g =', state.describe(), '=', distance
+    #if len(state._cities_visited) > 3:
+    #    xcvb
     return distance
      
 def h(state):
-    'Heuristic function'
+    'Heuristic function. Shortest path with city not currently in path'
     if len(state._cities_visited) == 0 or len(state._cities_visited) == len(cities):
         return 0
-    current_city = getCurrentCity(state)
+    current_city = state.getCurrentCity()
     allowed_moves = state.allowedMoves()
-  #  print 'allowed_moves =', allowed_moves
-    allowed_cities = [getCurrentCity(apply(move, state)) for move in allowed_moves if getCurrentCity(apply(move, state)) != current_city]
-  #  print 'current_city =', current_city, 'allowed_cities =', allowed_cities  
-    distance = min([getEdgeDistance(city, current_city) for city in allowed_cities])
-  #  print 'h =', state.describe(), '=', distance
-    return distance
+    allowed_cities = [apply(move, state).getCurrentCity() for move in allowed_moves if apply(move, state).getCurrentCity() != current_city]
+    return min([getEdgeDistance(city, current_city) for city in allowed_cities])
+  
  
 if __name__ == '__main__':
     starting_state = State([])
@@ -132,7 +135,7 @@ if __name__ == '__main__':
         tgstring = {False:'tree search', True:'graph search'}
         for graph_search in (False, True):
             print '---------------------------------', 'A*', tgstring[graph_search]
-            node = solver_astar.solve(starting_state, isTargetState, g, h, graph_search, 20, True)
+            node = solver_astar.solve(starting_state, isTargetState, None, h, graph_search, 20, True, gpath)
             print '  ---------------------------------'
             if node:
                 print 'Solution =', node.describe()

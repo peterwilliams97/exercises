@@ -96,12 +96,15 @@ class Node:
 def getNeighborNodes(node, g, h, gpath):
     'Given a node with a state that is otherwise empty, return neighbor nodes for all viable moves from that state'
     child_nodes = []
-  #  print '    allowedMoves   =', node.describe(), '***', [move.describe() for move in node._state.allowedMoves()]
+    #print '    allowedMoves   =', node.describe(), '***', [move.describe() for move in node._state.allowedMoves()]
     for move in node._state.allowedMoves():
+       # print '        isValidMove', node._state.describe(), move.describe(), node._state.isValidMove(move)
         if node._state.isValidMove(move):
             new_state = node._state.applyMove(move)
+            #print '        ancestorsContains', new_state.describe()
             if not node.ancestorsContain(new_state):
                 child_nodes.append(Node(node, new_state, g, h, gpath))
+    #print '    child_nodes   =',  [c.describe() for c in child_nodes]            
     return child_nodes
          
 def solve0(starting_state, isTargetState, g, h, graph_search, max_depth, verbose):
@@ -143,7 +146,7 @@ def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose,
         g(): step cost function g(state) where state is described below
         gpath(): path cost function gpath(state). Exactly one of g and gpath must be specified
         h(): path cost heuristic h(state)
-        graph_search: False => tree search, True => graph search  !@#$ Not true. Means that it uses a closed set
+        graph_search: False => tree search, True => graph search t
         max_depth: max tree depth to search to
         verbose: set True for richer logging
        
@@ -158,7 +161,7 @@ def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose,
     open_set = []         # priority queue to store nodes (the 'open' set)
     heapify(open_set)
     if graph_search:
-        visited = set([])           # set to store previously visited node signatures (the 'closed' set)
+        visited = set([])           # set to store previously visited node signatures (effficient version of the 'closed' set)
         closed_set = []             # same as visited but stores whole nodes instead of only signatures
         
     heappush(open_set, Node(None, starting_state, g, h, gpath))  # put the initial node on the queue 
