@@ -116,7 +116,7 @@ def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose,
         verbose: set True for richer logging
        
         state is of class State where 
-            members  __eq__(self, state), allowedMoves(self), isValidMove(self, move), applyMove(self, move). describe(self)
+            members  __eq__(self, state), signature(), allowedMoves(self), isValidMove(self, move), applyMove(self, move). describe(self)
         move is of class Move move where
             members describe(self)
     '''

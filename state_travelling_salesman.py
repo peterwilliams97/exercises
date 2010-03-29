@@ -136,7 +136,7 @@ if __name__ == '__main__':
             else:
                 print 'No solution'
             print '---------------------------------'
-    if False:
+    if True:
         hstring = {False:'without heuristic', True:'with heuristic'}
         for use_heuristic in (True, False):
             print '---------------------------------', 'Back tracking', hstring[use_heuristic]
