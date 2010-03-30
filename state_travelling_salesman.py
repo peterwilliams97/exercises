@@ -41,31 +41,34 @@ class State:
         self._cities_visited = cities_visited[:]
         
     def signature(self):
+        'Returns hashable object encompassing all state of State'
         return tuple(self._cities_visited)
                
     def __eq__(self, state):
         return self.signature() == state.signature() 
         
     def getCurrentCity(self):
-        'Returns the current city for state'
+        'Returns the current city for state, that is the last city visited'
         if len(self._cities_visited) == 0:
             return A
         else:
             return self._cities_visited[-1]
         
     def validMove_(self, move, current_city):
+        'Returns True if move is not to a city already visited'
         other_city = otherCity(move, current_city)
         if A in move and len(self._cities_visited) != 0 and len(self._cities_visited) != len(cities) - 1:
             return False
         return other_city not in self._cities_visited
          
     def allowedMoves(self):
+        'Returns list of all moves allowed from current state'
         current_city = self.getCurrentCity()
         possible_moves = [e for e in edges.keys() if current_city in e] 
-        valid_moves = [Move(e) for e in possible_moves if self.validMove_(e, current_city)]
-        return valid_moves
+        return [Move(e) for e in possible_moves if self.validMove_(e, current_city)]
         
     def applyMove(self, move):
+        'Returns State created by applying move to current state'
         return apply(move, self)
         
     def isValidMove(self, move):

@@ -99,8 +99,12 @@ def getNeighborNodes(node, g, h, gpath):
     for move in node._state.allowedMoves():
         if node._state.isValidMove(move):
             new_state = node._state.applyMove(move)
-            if not node.ancestorsContain(new_state):
+            if True:
                 child_nodes.append(Node(node, new_state, g, h, gpath))
+            else:
+                 # !@#$ closed_set should do this chec. Leave out
+                if not node.ancestorsContain(new_state):   
+                    child_nodes.append(Node(node, new_state, g, h, gpath))
     return child_nodes
          
 def printNodesInList(name, alist, max_displayed): 
