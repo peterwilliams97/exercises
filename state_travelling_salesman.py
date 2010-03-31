@@ -7,6 +7,9 @@ Problem
 A salesman must visit each of n cities. There is a road between each pair of 
 cities.  Starting at city #1. Find the route of minimal distance that visits each of 
 the cities only once and returns to city #1.
+
+References
+    http://en.wikipedia.org/wiki/Travelling_salesman_problem
 '''
 
 import  math, copy, solver_astar, solver_backtrack

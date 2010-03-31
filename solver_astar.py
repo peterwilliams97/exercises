@@ -102,7 +102,7 @@ def getNeighborNodes(node, g, h, gpath):
             if True:
                 child_nodes.append(Node(node, new_state, g, h, gpath))
             else:
-                 # !@#$ closed_set should do this chec. Leave out
+                 # !@#$ closed_set should do this chec. Leave out!
                 if not node.ancestorsContain(new_state):   
                     child_nodes.append(Node(node, new_state, g, h, gpath))
     return child_nodes
