@@ -1,4 +1,4 @@
-import sys, math, copy, decimal
+import math
 
 ''' A path is made along a chessboard in the following order.
     Given the distance traveled return the coordinates
