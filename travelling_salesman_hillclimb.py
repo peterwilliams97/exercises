@@ -35,7 +35,7 @@ def pathLength(path):
     return sum([getEdgeDistance(full_path[i-1],full_path[i]) for i in range(1, len(full_path))])
   
 def describe(path):
-    return ''.join(map(lambda c: chr(c+ord('A')), path)) + ':' + str(pathLength(path))
+    return 'A' + ''.join(map(lambda c: chr(c+ord('A')), path)) + 'A:' + str(pathLength(path))
     
 def doSwap(path, i, j):
     "Returns copy of path with ith and jth elements swapped"
@@ -56,75 +56,65 @@ def hillclimb(start_path, max_iterations):
     "Finds shortest path by hill climibing and returns shortest path and number of rounds to find it"
     assert(len(start_path) == num_free_cities)
     path = start_path
+    path_list = [path]
     for i in range(max_iterations):
         new_path = shortestNeighboringPath(path)
         if new_path == path:        # local minimum
             break
         path = new_path
-    return (path, i)
+        path_list += [path]
+    return (path, i, path_list)
    
 # Temperature below which annealing stops   
 minimum_temperature = 0.1    
-determinsitic = True
 
-def prob(current_val, val, temperature):
-    "Returns probability of accepting val given current_val and temperature"
+
+def probFunc(current_val, val, temperature):
+    '''Returns probability with which call should accepting new value 'val' given 
+    current_val and temperature'''
     assert(temperature >= minimum_temperature)
     if val < current_val:
         return 1.0
-    elif temperature < minimum_temperature:
-        return 0.0
     else:
-        #print '$$$', current_val, val, temperature
-        if determinsitic:
-            return 0.0
-        else:
-            return math.exp(-abs(val-current_val)/temperature) 
+        return math.exp(-abs(val-current_val)/temperature) 
         
-def isGoodEnough(current_val, val, temperature, probFunc):
-    p = probFunc(current_val, val, temperature)
-    return random.random() < p
+def acceptNewValue(current_val, val, temperature):
+    "Returns True if new value 'val' should be accepted"
+    return random.random() < probFunc(current_val, val, temperature)
         
 def cool(temperature, alpha):
+    "Cood down the temperature according to the schedule determined by alpha"
     return max(temperature*alpha, minimum_temperature)
     
-def goodNeighboringPath(path, temperature):
-    'Returns shortest path that is one swap away from path'
+def acceptableNeighboringPath(path, temperature):
+    '''Returns shortest path that is one swap away from 'path', or 'path' itself if 
+    it shorter.If temperature is high enough then may randomly return a shorter path'''
     shortest_path = path
     shortest_distance = pathLength(path)
     all_swaps = allSwaps(path)
     for swap in all_swaps:
         distance = pathLength(swap)
-        # print ' swap =', describe(swap)
-        if determinsitic:
-            assert(isGoodEnough(shortest_distance, distance, temperature, prob) == (distance < shortest_distance))
-        if isGoodEnough(shortest_distance, distance, temperature, prob):
+        if acceptNewValue(shortest_distance, distance, temperature):
             shortest_path = swap
             shortest_distance = distance
     return shortest_path    
    
 def anneal(start_path, max_iterations, start_temp, alpha):
-    'Finds shortest path by simulated annealing and returns shortest path and number of rounds to find it'
+    "Finds shortest path by simulated annealing and returns shortest path and number of rounds to find it"
     assert(len(start_path) == num_free_cities)
     path = start_path
     temp = start_temp
     for i in range(max_iterations):
         assert(temp >= minimum_temperature)
-        new_path = goodNeighboringPath(path, temp)
-        if determinsitic:
-            new_path2 = shortestNeighboringPath(path)
-            if new_path != new_path2:
-                print new_path2, new_path
-            assert(new_path2 == new_path)
-        if new_path == path:        # top of hill
+        new_path = acceptableNeighboringPath(path, temp)
+        if new_path == path:        # local minimum
             break
         path = new_path
         temp = cool(temp, alpha)
-        #print 'path =', describe(path), ', iterations =', i
     return (path, i)             
             
 def allPaths():   
-    'Returns list of all possible paths'
+    "Returns list of all possible free city paths sorted by length"
     all_paths = [[city] for city in free_cities]
     for i in range(len(free_cities) - 1):
         new_paths = []
@@ -140,14 +130,13 @@ def allPaths():
     
  
 if __name__ == '__main__':
-    determinsitic = False
     if False:
         for i in range(10):
             print i, random.random()
         for current_val in range(1, 4):
             for val in range(1,4):
-                tf = isGoodEnough(current_val, val, 4, prob)
-                print 'isGoodEnough', current_val, val, '=', tf, ' =', val < current_val
+                tf = acceptNewValue(current_val, val, 4, prob)
+                print 'acceptNewValue', current_val, val, '=', tf, ' =', val < current_val
                 if determinsitic:
                     assert(tf == (val < current_val))
 
@@ -162,12 +151,12 @@ if __name__ == '__main__':
         print '------------------ Testing All Starting Paths ------------------'
         total_rounds = 0
         for path in all_paths:
-            best_path, rounds = hillclimb(path, max_iterations)
+            best_path, rounds, path_list = hillclimb(path, max_iterations)
             total_rounds += rounds
-            print describe(path), '--', describe(best_path), 'in', str(rounds), 'rounds'
+            print describe(path), '--', describe(best_path), 'in', str(rounds), 'rounds', map(lambda x:describe(x), path_list)
         print 'Average rounds', float(total_rounds)/float(len(all_paths))
             
-    if False:
+    if True:
         print '------------------ Testing Simulated Annealing Params ------------------'
         start_path = all_paths[-1]  # longest path
         for start_temp in [0, 2, 3, 4, 10, 20, 30, 40, 100, 200]:
