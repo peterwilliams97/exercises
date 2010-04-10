@@ -32,7 +32,7 @@ class Node:
         self._unique_id = getUniqueNodeId()
           
     def f(self):
-        'f() in the A* algo'
+        "f() in the A* algo"
         return self._g_val + self._h_val
     
     def describeState(self):

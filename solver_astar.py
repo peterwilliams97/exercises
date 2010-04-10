@@ -22,7 +22,8 @@ def resetUniqueId():
 
 def pretty(n):
     "Pretty string for number n"
-    return str(round(n, 2))
+    return str(n)
+#    return str(round(n, 2))
     
 class Node:
     "Node in the search graph"
@@ -45,7 +46,7 @@ class Node:
         return self._state == node._state
         
     def g_(self):
-        "Path cost = sum of step costs"
+        "Path cost = sum of given step costs or given path cost"
         if self._using_gpath:
             return self._g_path_val
         else:
@@ -102,14 +103,12 @@ def getNeighborNodes(node, g, h, gpath):
             new_state = node._state.applyMove(move)
             if True:
                 child_nodes.append(Node(node, new_state, g, h, gpath))
-            else:
-                 # !@#$ closed_set should do this chec. Leave out!
-                if not node.ancestorsContain(new_state):   
-                    child_nodes.append(Node(node, new_state, g, h, gpath))
     return child_nodes
          
 def printNodesInList(name, alist, max_displayed): 
-    print name + ':', len(alist), [(n._unique_id, n._state.describe(), pretty(n.f())) for i,n in enumerate(alist) if i < max_displayed], '+', max(len(alist) - max_displayed, 0), 'others'
+    suffix = len(alist) > max_displayed and ' + ' + str(max(len(alist) - max_displayed, 0)) + ' other' or ''
+    print name + ':', [n._state.describe() for i,n in enumerate(alist) if i < max_displayed], suffix
+  # print name + ':', len(alist), [(n._unique_id, n._state.describe(), pretty(n.f())) for i,n in enumerate(alist) if i < max_displayed], '+', max(len(alist) - max_displayed, 0), 'others'
     
 def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose, gpath = None):
     """Find A* solution to path from starting_state to state:isTargetState(state) 
@@ -138,13 +137,14 @@ def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose,
   
     while len(open_set) > 0:
         if verbose:
-            printNodesInList('open set  ', open_set, 5)
+            printNodesInList('open set  ', open_set, 7)
             if graph_search:
                 printNodesInList('closed set', closed_set, 5)
      
         node = heappop(open_set)
         if verbose:
-            print '     ' * (node.depth() + 1), node.describe()
+            print ' ',  node.describe()
+            #print '     ' * (node.depth() + 1), node.describe()
         if isTargetState(node._state):      
             return node                     # Return goal state if found
         elif node.depth() < max_depth:
@@ -159,7 +159,6 @@ def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose,
             else:
                 for neighbor in getNeighborNodes(node, g, h, gpath):
                     heappush(open_set, neighbor) 
-                  #  assert(neighbor.f() >= node.f()) # http://en.wikipedia.org/wiki/Consistent_heuristic
             open_set.sort(key = lambda n: n.f())    # keep less costly nodes at the front
     return None                                     # Entire tree searched, goal state not found    
     

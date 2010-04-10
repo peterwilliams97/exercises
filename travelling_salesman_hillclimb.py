@@ -143,7 +143,7 @@ if __name__ == '__main__':
     max_iterations = 10
     all_paths = allPaths()
     if True:
-        print '------------------ Complete List of Paths ------------------'
+        print '-------------------- Complete List of Paths --------------------'
         for path in all_paths:
             print describe(path)
         
@@ -157,7 +157,7 @@ if __name__ == '__main__':
         print 'Average rounds', float(total_rounds)/float(len(all_paths))
             
     if True:
-        print '------------------ Testing Simulated Annealing Params ------------------'
+        print '---------- Testing Simulated Annealing Params ------------------'
         start_path = all_paths[-1]  # longest path
         for start_temp in [0, 2, 3, 4, 10, 20, 30, 40, 100, 200]:
             start_temp = max(start_temp, minimum_temperature)
@@ -167,7 +167,7 @@ if __name__ == '__main__':
                 print 'start_temp', start_temp, 'alpha', alpha, describe(start_path), '--', describe(best_path), 'in', str(rounds), 'rounds'
 
     if False:
-        print '------------------ Testing Simulated Annealing Params ------------------'
+        print '--------- Testing Many Simulated Annealing Params --------------'
         start_path = all_paths[-1]  # longest path
         temp_values = [0.0+float(x)/10.0 for x in range(30)] + range(3, 10)  + range(10, 100, 10) + range(100, 1000, 100)
         
@@ -180,7 +180,6 @@ if __name__ == '__main__':
                 param_results = []
                 for start_path in all_paths:
                     best_path, rounds = anneal(start_path, max_iterations, start_temp, alpha)
-                    #print 'start_temp', start_temp, 'alpha', alpha, describe(start_path), '--', describe(best_path), 'in', str(rounds), 'rounds'
                     result = (pathLength(best_path), best_path, rounds, start_temp, alpha)
                     results.append(result)
                     param_results.append(result)
@@ -188,7 +187,6 @@ if __name__ == '__main__':
                 summary = [float(sum(map(lambda e: e[i], param_results)))/num_paths for i in [0, 2]]
                 summary += [start_temp, alpha]
                 summary_results.append(summary)
-               # print start_temp, alpha, map(str, summary)
         
         def sortFunc(s1):
             return (s1[0], s1[1], 1000.0 - s1[2], 1000.0 - s1[3])
