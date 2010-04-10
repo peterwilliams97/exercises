@@ -48,43 +48,27 @@ def allSwaps(path):
     r = range(num_free_cities)
     return [doSwap(path,i,j) for j in r for i in r if i > j]
     
-            
-def bestNeighboringPath(path):
+def shortestNeighboringPath(path):
     "Returns shortest path that is one swap away from 'path', or 'path' itself if it shorter"
-    
-    if True:
-        return min([path] + allSwaps(path), key = lambda p: pathLength(p))
-        all_paths = [path] + allSwaps(path)
-        return min(all_paths,key = lambda p: pathLength(p))
-        #return shortest_path
-    else:
-        shortest_path = path
-        shortest_distance = pathLength(path)
-        all_swaps = allSwaps(path)
-        for swap in all_swaps:
-            distance = pathLength(swap)
-            if distance < shortest_distance:
-                shortest_path = swap
-                shortest_distance = distance
-        return shortest_path
-    
-            
+    return min([path] + allSwaps(path), key = lambda p: pathLength(p))
+     
 def hillclimb(start_path, max_iterations):
-    'Finds shortest path by hill climibing and returns shortest path and number of rounds to find it'
+    "Finds shortest path by hill climibing and returns shortest path and number of rounds to find it"
     assert(len(start_path) == num_free_cities)
     path = start_path
     for i in range(max_iterations):
-        new_path = bestNeighboringPath(path)
-        if new_path == path:        # top of hill
+        new_path = shortestNeighboringPath(path)
+        if new_path == path:        # local minimum
             break
         path = new_path
     return (path, i)
    
+# Temperature below which annealing stops   
 minimum_temperature = 0.1    
 determinsitic = True
 
 def prob(current_val, val, temperature):
-    'Returns probability of accepting val given current_val and temperature'
+    "Returns probability of accepting val given current_val and temperature"
     assert(temperature >= minimum_temperature)
     if val < current_val:
         return 1.0
@@ -128,7 +112,7 @@ def anneal(start_path, max_iterations, start_temp, alpha):
         assert(temp >= minimum_temperature)
         new_path = goodNeighboringPath(path, temp)
         if determinsitic:
-            new_path2 = bestNeighboringPath(path)
+            new_path2 = shortestNeighboringPath(path)
             if new_path != new_path2:
                 print new_path2, new_path
             assert(new_path2 == new_path)
