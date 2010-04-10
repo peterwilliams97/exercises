@@ -52,10 +52,11 @@ class State:
         
     def getCurrentCity(self):
         'Returns the current city for state, that is the last city visited'
-        if len(self._cities_visited) == 0:
-            return A
-        else:
-            return self._cities_visited[-1]
+        return len(self._cities_visited) > 0 and self._cities_visited[-1] or A 
+       # if len(self._cities_visited) == 0:
+       #     return A
+       # else:
+       #     return self._cities_visited[-1]
         
     def validMove_(self, move, current_city):
         'Returns True if move is not to a city already visited'

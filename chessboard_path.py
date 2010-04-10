@@ -10,6 +10,7 @@ import math
     '''
     
 def getCoords(distance):
+    "Returns (x,y) coordinates for distance traveled, as described above"
     width = int(math.ceil(math.sqrt(distance)))
     outer = distance - (width - 1)**2
     side1 = min(width, outer)

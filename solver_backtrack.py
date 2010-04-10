@@ -9,17 +9,18 @@ import sys, math, copy
     
 unique_node_id = 0
 def getUniqueNodeId():
-    'Returns a unique id'
+    "Returns a unique id"
     global unique_node_id
     unique_node_id = unique_node_id + 1
     return unique_node_id
     
 def pretty(n):
-    'Pretty string for number n'
-    return str(round(n, 2))    
+    "Pretty string for number n"
+    return str(n)
+    #return str(round(n, 2))    
     
 class Node:
-    'Node in the search graph'
+    "Node in the search graph"
     def __init__(self, parent, state, move, g, h):
         self._parent = parent
         self._state = state
@@ -38,7 +39,7 @@ class Node:
          return self._state.describe()
     
     def _describe(self):
-        'Returns gtring description of node. Assumes state has describe() function that does same'
+        "Returns gtring description of node. Assumes state has describe() function that does same"
         return self._state.describe() + ' - c = ' + str(len(self._children)) # + " " + str(self._visited) 
         
     def ancestorStates(self):
@@ -88,7 +89,7 @@ def sortFuncBad(node):
     return -node.f()    
                                           
 def getChildNodes(node, g, h, useHeuristic):
-    'Given a node with a state that is otherwise empty, return child nodes for all viable moves from that state'
+    "Given a node with a state that is otherwise empty, return child nodes for all viable moves from that state"
     child_nodes = []
     for move in node._state.allowedMoves():
         if node._state.isValidMove(move):
@@ -101,15 +102,15 @@ def getChildNodes(node, g, h, useHeuristic):
     return child_nodes
   
 def isAncestorState(parent, node): 
-    'Return True iff nodd state is the same as an ancestor state'
+    "Return True iff nodd state is the same as an ancestor state"
     return parent and parent.ancestorsContain(node._state)
  
 def report(spacer, outcome):
     print spacer, '*', outcome
                  
 def solveNode(node, isTargetState, g, h, max_depth, verbose, useHeuristic):
-    'Find backtracking solution to path from node to isTargetState() with path-cost/heuristic function g()'
-    one_space = '     ' 
+    "Find backtracking solution to path from node to isTargetState() with path-cost/heuristic function g()"
+    one_space = '\t' 
     spacer = one_space * node.depth()
     if verbose:
         print spacer, node.describeState() 

@@ -24,13 +24,13 @@ edges = { (A,B):7, (A,C):6,  (A,D):10, (A,E):13,
 num_free_cities = len(free_cities)
     
 def getEdgeDistance(city1, city2):
-    'Returns distance between city1 and city2'
+    "Returns distance between city1 and city2"
     assert(city1 != city2)
     keys = [key for key in edges.keys() if city1 in key and city2 in key]
     return edges[keys[0]] 
 
 def pathLength(path):
-    'Path-cost function'
+    "Returns length of full path with free cities in 'path'"
     full_path = [A] + path + [A]
     return sum([getEdgeDistance(full_path[i-1],full_path[i]) for i in range(1, len(full_path))])
   
@@ -38,23 +38,26 @@ def describe(path):
     return ''.join(map(lambda c: chr(c+ord('A')), path)) + ':' + str(pathLength(path))
     
 def doSwap(path, i, j):
-    'Returns copy of path with ith and jth elements swapped'
+    "Returns copy of path with ith and jth elements swapped"
     copy = path[:]
     copy[i],copy[j] = copy[j],copy[i]
     return copy
     
 def allSwaps(path):
-    'Returns list of possible swappings on path'
+    "Returns list of possible swappings on path"
     r = range(num_free_cities)
     return [doSwap(path,i,j) for j in r for i in r if i > j]
     
             
 def bestNeighboringPath(path):
-    'Returns shortest path that is one swap away from path'
-    all_paths = [path] + allSwaps(path)
-    if False:
-        shortest_path = min(map(lambda path: [path, pathLength(path)], all_paths))
+    "Returns shortest path that is one swap away from 'path', or 'path' itself if it shorter"
+    
     if True:
+        return min([path] + allSwaps(path), key = lambda p: pathLength(p))
+        all_paths = [path] + allSwaps(path)
+        return min(all_paths,key = lambda p: pathLength(p))
+        #return shortest_path
+    else:
         shortest_path = path
         shortest_distance = pathLength(path)
         all_swaps = allSwaps(path)
@@ -63,7 +66,7 @@ def bestNeighboringPath(path):
             if distance < shortest_distance:
                 shortest_path = swap
                 shortest_distance = distance
-    return shortest_path
+        return shortest_path
     
             
 def hillclimb(start_path, max_iterations):
@@ -190,7 +193,7 @@ if __name__ == '__main__':
                 best_path, rounds = anneal(start_path, max_iterations, start_temp, alpha)
                 print 'start_temp', start_temp, 'alpha', alpha, describe(start_path), '--', describe(best_path), 'in', str(rounds), 'rounds'
 
-    if True:
+    if False:
         print '------------------ Testing Simulated Annealing Params ------------------'
         start_path = all_paths[-1]  # longest path
         temp_values = [0.0+float(x)/10.0 for x in range(30)] + range(3, 10)  + range(10, 100, 10) + range(100, 1000, 100)

@@ -88,7 +88,7 @@ def apply(move, state):
     return new_state
             
 def subsetsOf(passengers):
-    'Return list of all 0 and 1 element subsets of passengers. These are the allowed combinations of passengers'
+    "Return list of all 0 and 1 element subsets of passengers. These are the allowed combinations of passengers"
     subsets = [set([])]
     p = list(passengers)
     for i in range(len(p)):
@@ -96,7 +96,7 @@ def subsetsOf(passengers):
     return subsets
     
 def possibleMoves(state):
-    'Return list of all possible moves for state, some of which may be invalid'
+    "Return list of all possible moves for state, some of which may be invalid"
     candidates = state.thingsOnSide(state._boat_at_dest)
     moves = [Move(ss, state._boat_at_dest) for ss in subsetsOf(candidates)]
     return moves
@@ -109,12 +109,12 @@ def isTargetState(state):
     return state == target_state 
     
 def g(state):
-    'Step cost function'
+    "Step cost function"
     return 0
      
 def h(state):
-    'Heuristic function'
-    return 0  # http://en.wikipedia.org/wiki/Consistent_heuristic
+    "Heuristic function"
+    #return 0  # http://en.wikipedia.org/wiki/Consistent_heuristic
     return state.numThingsLeft()  
                             
 if __name__ == '__main__':
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     target_state = State(set([Wolf, Rabbit, Cabbage]), Dest)
     print "starting_state =", starting_state.describe()
     print "target_state =", target_state.describe()
-    if True:
+    if False:
         tgstring = {False:'tree search', True:'graph search'}
         for graph_search in (False, True):
             print '---------------------------------', 'A*', tgstring[graph_search]
