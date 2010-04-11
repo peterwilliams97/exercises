@@ -41,6 +41,7 @@ class State:
         return self.signature() == state.signature()        
    
     def signature(self):
+        "Returns hashable object encompassing all state of State"
         return (self._x, self._y, len(self._blocked), len(self._known_barriers))
                  
     def allowedMoves(self):

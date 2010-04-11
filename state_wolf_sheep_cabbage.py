@@ -27,6 +27,7 @@ class State:
         self._boat_at_dest = boat
         
     def signature(self):
+        "Returns hashable object encompassing all state of State"
         return (frozenset(self._things_at_dest), self._boat_at_dest)
         
     def __eq__(self, state):
