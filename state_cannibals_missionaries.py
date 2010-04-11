@@ -83,15 +83,14 @@ def apply(move, state):
     else:
         new_state = State(state._cannibals_at_dest - move._cannibals, state._missionaries_at_dest - move._missionaries, Orig)
     return new_state
-            
-def subsetsOf(passengers):
-    "Returns set of all 1 and 2 element subsets of passengers. These are the allowed combinations of passengeers"
-    return ((0,1), (1,0), (0,2), (1,1), (2,0))
-    
+             
+# Allowed combinations of passengeers"    
+passenger_commbinations = ((0,1), (1,0), (0,2), (1,1), (2,0))
+
 def possibleMoves(state):
     "Returns list of all possible moves for state, some of which may be invalid"
     candidates = state.peopleOnSide(state._boat_location)
-    return [Move(ss[0], ss[1], state._boat_location) for ss in subsetsOf(candidates)]
+    return [Move(ss[0], ss[1], state._boat_location) for ss in passenger_commbinations]
     
 def validMoves(moves, state):
     "Return list of valid moves in 'moves'"
