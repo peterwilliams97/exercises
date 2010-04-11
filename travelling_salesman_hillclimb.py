@@ -68,7 +68,6 @@ def hillclimb(start_path, max_iterations):
 # Temperature below which annealing stops   
 minimum_temperature = 0.1    
 
-
 def probFunc(current_val, val, temperature):
     '''Returns probability with which call should accepting new value 'val' given 
     current_val and temperature'''
@@ -83,7 +82,7 @@ def acceptNewValue(current_val, val, temperature):
     return random.random() < probFunc(current_val, val, temperature)
         
 def cool(temperature, alpha):
-    "Cood down the temperature according to the schedule determined by alpha"
+    "Cool down the temperature according to the schedule determined by alpha"
     return max(temperature*alpha, minimum_temperature)
     
 def acceptableNeighboringPath(path, temperature):
@@ -130,25 +129,16 @@ def allPaths():
     
  
 if __name__ == '__main__':
-    if False:
-        for i in range(10):
-            print i, random.random()
-        for current_val in range(1, 4):
-            for val in range(1,4):
-                tf = acceptNewValue(current_val, val, 4, prob)
-                print 'acceptNewValue', current_val, val, '=', tf, ' =', val < current_val
-                if determinsitic:
-                    assert(tf == (val < current_val))
-
     max_iterations = 10
     all_paths = allPaths()
+    
     if True:
         print '-------------------- Complete List of Paths --------------------'
         for path in all_paths:
             print describe(path)
         
     if True:
-        print '------------------ Testing All Starting Paths ------------------'
+        print '-------- Testing Hill Climbing from All Starting Paths ---------'
         total_rounds = 0
         for path in all_paths:
             best_path, rounds, path_list = hillclimb(path, max_iterations)

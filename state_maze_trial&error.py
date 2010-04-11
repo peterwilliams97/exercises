@@ -27,7 +27,6 @@ direction_names = { Up:'U', Down:'D', Left:'L', Right:'R' }
 grid_width = 3
 grid_height = 3
 
-
 class State:
     '''Maze state.
         x,y location and a direction '''
@@ -51,15 +50,13 @@ class State:
         return apply(move, self)
                
     def isValidMove(self, move):
-        "All moves are valid. Only find out after trying if they are invalid"
         return validMove(self, move, True)
         
     def describe(self) :
         return '[' + str(self._x+1) + ',' + str(self._y+1) + '|' + str(len(self._known_barriers)) + ']'      
             
 class Move:
-    '''A possible move. Has 1 or 2 passengers and a direction
-        _starting_point is starting point of journey (from Orig or from Dest)'''
+    "Moves are 1 unit in specified direction"
     def __init__(self, direction):
         self._direction = direction
        
@@ -73,8 +70,6 @@ Horizontal, Vertical = False, True
 # Barrier element: x,y,vertical
 #   x,y is the cell at the left, bottom of the edge
 all_barriers = set([(Vertical, 1,2), (Horizontal, 1,1), (Horizontal, 2,1)])
-known_barriers = set([])
-
 
 # Map of edges a move could run into
 # Direction: (Edge type, dx, dy)
@@ -86,6 +81,10 @@ edge_delta_table = {
 }
 
 def barrierForMove(state, move, known):
+    '''Returns True if there is a barrier blocking a move from state
+       If known is True then return only barriers known by this move
+       If known is False then return all barriers
+    '''
     if known:
         barriers = state._known_barriers
     else:
@@ -97,9 +96,10 @@ def barrierForMove(state, move, known):
     return None
     
 def validMove(state, move, known):
-    'Returns True if move is valid'
+    "Returns True if move is valid"
     return not barrierForMove(state, move, known)
  
+# Map moves to coordinate deltas 
 move_table = { 
     Left: (-1,  0),
     Right:( 1,  0),
@@ -114,7 +114,7 @@ def apply(move, state):
         new_state = State(state._x, state._y, state._blocked | set([move._direction]), state._known_barriers | set([barrier]))
     else:  
         delta = move_table[move._direction]  
-        # Known barriers remain known
+        # Ancestors' known barriers are known by this node.
         new_state = State(state._x + delta[0], state._y + delta[1], known_barriers = state._known_barriers)
     return new_state
             
