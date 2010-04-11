@@ -23,12 +23,12 @@ edges = { (A,B):7, (A,C):6,  (A,D):10, (A,E):13,
           (D,E):6 }  
 
 def otherCity(edge, current_city):
-    'Return the city other than current_city in the edge 2-tuple'
+    "Return the city other than current_city in the edge 2-tuple"
     assert(current_city in edge)
     return edge[{False:0, True:1}[edge[0]==current_city]]
     
 def getEdgeDistance(city1, city2):
-    'Return distance between city1 and city2'
+    "Return distance between city1 and city2"
     assert(city1 != city2)
     for key in edges.keys():
         if city1 in key and city2 in key:
@@ -44,39 +44,35 @@ class State:
         self._cities_visited = cities_visited[:]
         
     def signature(self):
-        'Returns hashable object encompassing all state of State'
+        "Returns hashable object encompassing all state of State"
         return tuple(self._cities_visited)
                
     def __eq__(self, state):
         return self.signature() == state.signature() 
         
     def getCurrentCity(self):
-        'Returns the current city for state, that is the last city visited'
+        "Returns the current city for state, that is the last city visited"
         return len(self._cities_visited) > 0 and self._cities_visited[-1] or A 
-       # if len(self._cities_visited) == 0:
-       #     return A
-       # else:
-       #     return self._cities_visited[-1]
-        
+    
     def validMove_(self, move, current_city):
-        'Returns True if move is not to a city already visited'
+        "Returns True if move is not to a city already visited"
         other_city = otherCity(move, current_city)
         if A in move and len(self._cities_visited) != 0 and len(self._cities_visited) != len(cities) - 1:
             return False
         return other_city not in self._cities_visited
          
     def allowedMoves(self):
-        'Returns list of all moves allowed from current state'
+        "Returns list of all moves allowed from current state"
         current_city = self.getCurrentCity()
         possible_moves = [e for e in edges.keys() if current_city in e] 
         return [Move(e) for e in possible_moves if self.validMove_(e, current_city)]
         
     def applyMove(self, move):
-        'Returns State created by applying move to current state'
+        "Returns State created by applying move to current state"
         return apply(move, self)
         
     def isValidMove(self, move):
-        'Move is valid if state moved to contains no duplicates'
+        "Move is valid if state moved to contains no duplicates"
         new_state = apply(move, self)
         return len(set(new_state._cities_visited)) == len(new_state._cities_visited)    
         
@@ -96,18 +92,18 @@ class Move:
       
         
 def apply(move, state):
-    'Apply move to state'
+    "Apply move to state"
     assert(state.getCurrentCity() in move._edge)
     new_state = State(state._cities_visited)
     new_state._cities_visited.append(otherCity(move._edge, new_state.getCurrentCity()))
     return new_state
         
 def isTargetState(state):
-    'Test for final state'
+    "Test for final state"
     return set(cities).issubset(state._cities_visited)
     
 def gpath(state):
-    'Path cost function'
+    "Path cost function"
     last_city = A
     distance = 0
     if len(state._cities_visited) > 0:
@@ -117,7 +113,7 @@ def gpath(state):
     return distance
      
 def h(state):
-    'Heuristic function. Shortest path with city not currently in path'
+    "Heuristic function. Shortest path with city not currently in path"
     if len(state._cities_visited) == 0 or len(state._cities_visited) == len(cities):
         return 0
     current_city = state.getCurrentCity()
