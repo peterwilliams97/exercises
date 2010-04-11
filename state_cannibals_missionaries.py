@@ -111,11 +111,6 @@ def h(state):
 def hbest(state):
     "Null heuristic function. Guaranateed to be admissable"
     return 0
-
-    
-def resetHbest():
-    global best_h
-    best_h = number_of_each * 2
                             
 if __name__ == '__main__':
     starting_state = State(0, 0, Orig)
@@ -123,7 +118,6 @@ if __name__ == '__main__':
     if True:
         tgstring = {False:'tree search', True:'graph search'}
         for graph_search in (True, False):
-            resetHbest()
             print '---------------------------------', 'A*', tgstring[graph_search]
             if graph_search:
                 node = solver_astar.solve(starting_state, isTargetState, g, hbest, graph_search, 20, True)
@@ -138,7 +132,6 @@ if __name__ == '__main__':
     if True:
         hstring = {False:'without heuristic', True:'with heuristic'}
         for use_heuristic in (True, False):
-            resetHbest()
             print '---------------------------------', 'Back tracking', hstring[use_heuristic]
             node = solver_backtrack.solve(starting_state, isTargetState, g, h, 20, True, use_heuristic)
             print '---------------------------------'
