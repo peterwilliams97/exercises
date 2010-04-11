@@ -1,15 +1,15 @@
 '''
-Describes the states of the Travelling Salesman
-problem and the operations on them
+Contains hill climbing and simulated annealing solutions to the Travelling 
+Salesman problem 
 
 Problem
 -------
 A salesman must visit each of n cities. There is a road between each pair of 
-cities.  Starting at city #1. Find the route of minimal distance that visits each of 
-the cities only once and returns to city #1.
+cities.  Starting at city #1. Find the route of minimal distance that visits 
+each of the cities only once and returns to city #1.
 '''
 
-import sys, math,  random
+import random
 
 # Map nodes
 num_cities = ord('E') - ord('A') + 1
