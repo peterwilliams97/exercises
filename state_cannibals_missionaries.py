@@ -10,7 +10,7 @@ should they use this boat to cross the river in such a way that cannibals never
 outnumber missionaries on either side of the river? 
 '''
 
-import sys, math, copy, decimal, solver_astar, solver_backtrack
+import  solver_astar, solver_backtrack
 
 # Data types
 Cannibals, Missionaries = range(2)
@@ -108,12 +108,10 @@ def h(state):
     "Heuristic function"
     return sum(state.peopleOnSide(Orig))
    
-best_h = number_of_each * 2
-
 def hbest(state):
-    global best_h
-    best_h = max(best_h, h(state))
-    return best_h
+    "Null heuristic function. Guaranateed to be admissable"
+    return 0
+
     
 def resetHbest():
     global best_h
