@@ -9,7 +9,7 @@ cities.  Starting at city #1. Find the route of minimal distance that visits
 each of the cities only once and returns to city #1.
 '''
 
-import random
+import math, random
 
 # Map nodes
 num_cities = ord('E') - ord('A') + 1
