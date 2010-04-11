@@ -89,7 +89,6 @@ passenger_commbinations = ((0,1), (1,0), (0,2), (1,1), (2,0))
 
 def possibleMoves(state):
     "Returns list of all possible moves for state, some of which may be invalid"
-    candidates = state.peopleOnSide(state._boat_location)
     return [Move(ss[0], ss[1], state._boat_location) for ss in passenger_commbinations]
     
 def validMoves(moves, state):
@@ -101,14 +100,14 @@ def isTargetState(state):
     
 def g(state):
     "Step cost function"
-    return 1 # sum(state.peopleOnSide(Orig))
+    return 1 
      
 def h(state):
     "Heuristic function"
     return sum(state.peopleOnSide(Orig))
    
 def hbest(state):
-    "Null heuristic function. Guaranateed to be admissable"
+    "Null heuristic function. Guaranteed to be admissable"
     return 0
                             
 if __name__ == '__main__':
