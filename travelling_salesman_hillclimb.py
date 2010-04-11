@@ -69,7 +69,7 @@ def hillclimb(start_path, max_iterations):
 minimum_temperature = 0.1    
 
 def probFunc(current_val, val, temperature):
-    '''Returns probability with which call should accepting new value 'val' given 
+    '''Returns probability with which caller should accept new value 'val' given 
     current_val and temperature'''
     assert(temperature >= minimum_temperature)
     if val < current_val:
