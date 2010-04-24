@@ -1,8 +1,15 @@
 '''
+Runs a self-organizing map algorithm over given input data and initial 
+weights for user specified eta and weight updating functions.
 
-Runs a self-organizing map algorithm over some given input data and initial weights
-for a user specified eta and weight updating functions 
-    
+Writes results in CSV format. These results can be saved to a .csv file which 
+can be read in Excel. e.g.
+
+    python self_organizing_map.py  > map.csv
+
+http://spreadsheets.google.com/pub?key=tQrE7m7afhWGvFkSRPs3Agw&output=html 
+is a formatted version of such a map.csv
+ 
 Created on 24/04/2010
 
 @author: peter
@@ -72,20 +79,21 @@ if __name__ == '__main__':
             [0, 0, 0, 1],
             [1, 0, 0, 0],
             [0, 0, 1, 1]]
-    # starting weights        
+    # Starting weights        
     w_in = [[0.2, 0.6, 0.5, 0.9],              
             [0.8, 0.4, 0.7, 0.3]]
     # Run 12 iterations as requested. Could set this to a higher number e.g. 120
     num_iterations = 12
-    # test inputs 
+    # Validation input
     i_test = [1, 1, 1, 0]       
     # Names for header row in CSV file
     column_names = (('i',4), ('w1',4), ('w2',4), ('o',2), ('d',2))         
     
-    # Check that all vectors are the same length 
+    # Check that all input vectors are the same length as all weight vectors 
     for w in w_in:
         for i in i_in:
             assert(len(w)==len(i))
+        assert(len(w)==len(i_test))
     
     # Set initial weights and doh <num_iterations> iterations of the algorithm
     w = w_in
