@@ -71,19 +71,24 @@ if __name__ == '__main__':
     i_in = [[1, 1, 0, 0],
             [0, 0, 0, 1],
             [1, 0, 0, 0],
-            [0, 0, 1, 1] ]
+            [0, 0, 1, 1]]
     # starting weights        
     w_in = [[0.2, 0.6, 0.5, 0.9],              
             [0.8, 0.4, 0.7, 0.3]]
+    # Run 12 iterations as requested. Could set this to a higher number e.g. 120
     num_iterations = 12
-    column_names = (('i',4), ('w1',4), ('w2',4), ('o',2), ('d',2))    
-    i_test = [1, 1, 1, 0]               # test inputs
+    # test inputs 
+    i_test = [1, 1, 1, 0]       
+    # Names for header row in CSV file
+    column_names = (('i',4), ('w1',4), ('w2',4), ('o',2), ('d',2))         
     
-    # Some checks for startup and set initial weights
-    assert(len(i_in[0])==len(w_in[0]))
+    # Check that all vectors are the same length 
+    for w in w_in:
+        for i in i_in:
+            assert(len(w)==len(i))
+    
+    # Set initial weights and doh <num_iterations> iterations of the algorithm
     w = w_in
-    
-    # Step through <num_iterations> iterations of the algorithm
     print ',' + aa2csv(map(lambda x: title(x[0],x[1]), column_names))
     for t in range(num_iterations):
         i = i_in[t%len(i_in)]
