@@ -23,7 +23,6 @@ def resetUniqueId():
 def pretty(n):
     "Pretty string for number n"
     return str(n)
-#    return str(round(n, 2))
     
 class Node:
     "Node in the search graph"
@@ -108,7 +107,6 @@ def getNeighborNodes(node, g, h, gpath):
 def printNodesInList(name, alist, max_displayed): 
     suffix = len(alist) > max_displayed and ' + ' + str(max(len(alist) - max_displayed, 0)) + ' other' or ''
     print name + ':', [n._state.describe() for i,n in enumerate(alist) if i < max_displayed], suffix
-  # print name + ':', len(alist), [(n._unique_id, n._state.describe(), pretty(n.f())) for i,n in enumerate(alist) if i < max_displayed], '+', max(len(alist) - max_displayed, 0), 'others'
     
 def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose, gpath = None):
     """Find A* solution to path from starting_state to state:isTargetState(state) 
@@ -144,7 +142,6 @@ def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose,
         node = heappop(open_set)
         if verbose:
             print ' ',  node.describe()
-            #print '     ' * (node.depth() + 1), node.describe()
         if isTargetState(node._state):      
             return node                     # Return goal state if found
         elif node.depth() < max_depth:
@@ -153,7 +150,7 @@ def solve(starting_state, isTargetState, g, h, graph_search, max_depth, verbose,
                 closed_set.append(node)
                 for neighbor in getNeighborNodes(node, g, h, gpath):
                     if neighbor._state.signature() not in visited:
-                        if not neighbor in open_set:
+                        if neighbor not in open_set:
                             heappush(open_set, neighbor)
                             assert(neighbor.f() >= node.f()) # http://en.wikipedia.org/wiki/Consistent_heuristic
             else:
