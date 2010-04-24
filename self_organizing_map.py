@@ -26,7 +26,7 @@ def l2(v1, v2):
     return sqrt(sum(map(lambda x: (x[0]-x[1])**2, zip(v1,v2))))
 
 def calcOutputs(w,i):
-    "Calculates outputs o and distances d for inputs i and weights w"
+    "Calculates outputs o and distances d for input i and weights w"
     o = map(lambda x: prod(i,x), w)
     d = map(lambda x: l2(i,x), w)
     return (o, d)
@@ -91,10 +91,9 @@ if __name__ == '__main__':
     
     # Check that all input vectors are the same length as all weight vectors 
     for w in w_in:
-        for i in i_in:
+        for i in i_in + [i_test]:
             assert(len(w)==len(i))
-        assert(len(w)==len(i_test))
-    
+       
     # Set initial weights and doh <num_iterations> iterations of the algorithm
     w = w_in
     print ',' + aa2Csv(map(lambda x: title(x[0],x[1]), column_names))
