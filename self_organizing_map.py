@@ -51,13 +51,13 @@ def updateWeights(w, i, t, d):
     w_new[j] = updateFunc(w[j],i,t)
     return w_new
 
-def a2csv(array):
+def a2Csv(array):
     "Convert array of objects to a comma separated string"
     return ','.join(map(str, array))
     
-def aa2csv(array2):
+def aa2Csv(array2):
     "Convert array of array of objects to a comma separated string"
-    return  ','.join(map(a2csv, array2))
+    return  ','.join(map(a2Csv, array2))
 
 def title(name, number):
     "Returns array of strings 'name[1]'...'name[<number>]'"
@@ -89,16 +89,16 @@ if __name__ == '__main__':
     
     # Set initial weights and doh <num_iterations> iterations of the algorithm
     w = w_in
-    print ',' + aa2csv(map(lambda x: title(x[0],x[1]), column_names))
+    print ',' + aa2Csv(map(lambda x: title(x[0],x[1]), column_names))
     for t in range(num_iterations):
         i = i_in[t%len(i_in)]
         o,d = calcOutputs(w,i)
         w_new = updateWeights(w,i,t,d)
-        print 'i' + str(t%len(i_in)+1) + ',' + aa2csv([i,w[0],w[1],o,d])
+        print 'i' + str(t%len(i_in)+1) + ',' + aa2Csv([i,w[0],w[1],o,d])
         w = w_new
     
     # Run the validation case 
     i = i_test
     o,d = calcOutputs(w,i)
-    print 'i_test,' + aa2csv([i,w[0],w[1],o,d])
+    print 'i_test,' + aa2Csv([i,w[0],w[1],o,d])
     
