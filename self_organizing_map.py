@@ -7,7 +7,7 @@ Created on 24/04/2010
 
 @author: peter
 '''
- 
+import copy 
 from math import *
     
 def prod(v1, v2):
@@ -46,11 +46,9 @@ def updateWeights(w, i, t, d):
         d = distances between w's and i
         Algorithm: update the w that is closest to i
     '''
+    w_new = copy.deepcopy(w)
     j = 0 if d[0] < d[1] else 1
-    k = 1 if d[0] < d[1] else 0
-    w_new = [[],[]]
     w_new[j] = updateFunc(w[j],i,t)
-    w_new[k] = w[k][:] 
     return w_new
 
 def a2csv(array):
@@ -98,5 +96,5 @@ if __name__ == '__main__':
     # Run the validation case 
     i = i_test
     o,d = calcOutputs(w,i)
-    print 'i_test,' + aa2csv([i,w[0], w[1],o,d])
+    print 'i_test,' + aa2csv([i,w[0],w[1],o,d])
     
