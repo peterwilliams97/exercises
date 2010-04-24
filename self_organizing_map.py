@@ -68,17 +68,16 @@ if __name__ == '__main__':
     # Based on this data, we expect clusters of (speaking in 1-offset indexes) 
     #        inputs 1 and 3 with high weights on elements 1 and 2
     #        inputs 2 and 4 with high weights on elements 3 and 4
-    i_in = [
-        [1, 1, 0, 0],
-        [0, 0, 0, 1],
-        [1, 0, 0, 0],
-        [0, 0, 1, 1] ]
-    w_in = [
-        [0.2, 0.6, 0.5, 0.9],
-        [0.8, 0.4, 0.7, 0.3]]
+    i_in = [[1, 1, 0, 0],
+            [0, 0, 0, 1],
+            [1, 0, 0, 0],
+            [0, 0, 1, 1] ]
+    # starting weights        
+    w_in = [[0.2, 0.6, 0.5, 0.9],              
+            [0.8, 0.4, 0.7, 0.3]]
     num_iterations = 12
     column_names = (('i',4), ('w1',4), ('w2',4), ('o',2), ('d',2))    
-    i_test = [1, 1, 1, 0]
+    i_test = [1, 1, 1, 0]               # test inputs
     
     # Some checks for startup and set initial weights
     assert(len(i_in[0])==len(w_in[0]))
@@ -89,7 +88,7 @@ if __name__ == '__main__':
     for t in range(num_iterations):
         i = i_in[t%len(i_in)]
         o,d = calcOutputs(w,i)
-        w_new = updateWeights(w, i, t, d)
+        w_new = updateWeights(w,i,t,d)
         print 'i' + str(t%len(i_in)+1) + ',' + aa2csv([i,w[0],w[1],o,d])
         w = w_new
     
