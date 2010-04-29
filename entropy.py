@@ -44,8 +44,9 @@ if __name__ == '__main__':
         p = [1.0/n for i in range(n)]
         test(0, p)
      
-      
-    for d in (0.1, 0.2, 0.5):
+    num = 5
+    for i in range(num+1):
+        d = (i/num)**2
         for n in range(2, 9, 2):
             m = 1.0/n
             dm = d*m
