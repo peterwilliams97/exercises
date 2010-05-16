@@ -1,11 +1,16 @@
 '''
 manipulate csv files
+Clean advertisement detection trainging set file
+
+Peter
+16/05/2010
 '''
 import copy
 from math import *
 from operator import itemgetter
 
 def validateMatrix(matrix):
+    "Check that all rows in matrix and same length"
     assert(len(matrix) > 0)
     assert(len(matrix[0]) > 0)
     for i in range(1, len(matrix)):
@@ -64,6 +69,7 @@ def swapMatrixColumn(matrix, i, j):
 '''        
 
 def makeHeader():
+    "Make a header row based on the above comments"
     h = ['' for i in range(1559)]
     h[0] = 'height'
     h[1] = 'width'
@@ -88,7 +94,8 @@ def isMissingValue(e):
     "User defined function for detecting missing value"
     return e.strip() == '?'
 
-def checkRemoveColumns(matrix):
+def replaceMissingValues(matrix):
+    "Replace missing values in a 2d matrix with average or mode"
     width = len(matrix[0])
     height = len(matrix)
     h = matrix[0]
@@ -111,11 +118,11 @@ def checkRemoveColumns(matrix):
                 for v in matrix[1:]:
                     if uniques[j] == v[i]:
                         number_each[j] = number_each[j] + 1
-            if len(uniques) <= 3:
+            if len(uniques) <= 3:  # if there a few values then replace wih mode
                 j = max(enumerate(number_each), key=itemgetter(1))[0]
                 replacement = uniques[j]
                 assert(not isMissingValue(v[i]))
-            else:
+            else:  # if there are many values then replace with average
                 remaining = [float(v[i]) for v in matrix[1:] if not isMissingValue(v[i])]
                 replacement = sum(remaining)/float(len(remaining))
             print 'replacement', replacement  
@@ -139,7 +146,7 @@ if __name__ == '__main__':
     writeCsv(headered_name, hdata)
     h2data = readCsvRaw(headered_name)
     
-    checkRemoveColumns(hdata)
+    replaceMissingValues(hdata)
     writeCsv(headered_name_pp, hdata)
     
    
