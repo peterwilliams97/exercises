@@ -1,5 +1,5 @@
 '''
-Check that NumPy, SciPy and MDP are installed and working
+Use NumPy, SciPy and MDP to do PCA on an advert classification data set
 See http://mdp-toolkit.sourceforge.net/index.html#DOWINS
 
 Created on 16/05/2010
@@ -12,6 +12,8 @@ import scipy
 import mdp
 import bimdp
 import csv
+import random
+import time
 
 
 def covTest():
@@ -50,7 +52,7 @@ def mdpTest():
     x = array(x2_in)
     x2 = array([[1,1,1,1], [2,2,4,4], [3,3,3,3]])
     print x
-    pcanode = mdp.nodes.PCANode(svd=True, output_dim = 0.99, dtype='float64')
+    pcanode = mdp.nodes.PCANode(svd=True,  dtype='float64')
     print pcanode
     pcanode.train(x)
     p = pcanode.get_projmatrix()
@@ -72,12 +74,126 @@ def mdpTest():
     pib = pcanode.inverse(array([[1, 0],[0, 1]]))
     print pib
     
+def makeUniqueVector(vec_num, num_vecs, size):
+    "Return a vector of length size that is unique for vec_num in num_vecs"
+    assert(0 <= vec_num and vec_num < num_vecs)
+    assert(num_vecs < size)    
+    def numGen(i, v, n):
+        if i < n:      x = 1 if i == v else 0
+        elif i < 2*n:  x = 0 if i == v else 1
+        else:          x = random.choice([0,1])
+        return x
+    v = [numGen(i, vec_num, num_vecs) for i in range(size)] 
+    #print 'makeUniqueVector', v
+    return v
+
+def makeBasisVectors(num_vecs, size):
+    return [makeUniqueVector(v, num_vecs, size) for v in range(num_vecs)]
+
+def makeWeights(num_vecs):
+    "Make a set of num_vecs random weights"
+    w = [random.random() for i in range(num_vecs)]
+    #print 'makeWeights', w 
+    return w
+
+def applyWeights(vectors, weights):
+    "Returns sum(i,v[i]*w[i])"
+    assert(len(vectors) == len(weights))
+    #print 'applyWeights', weights
+    def getSum(i):
+        v,w = vectors,weights
+        #print 'w', w
+        #print 'v', v
+        return sum([v[j][i]*w[j] for j in range(len(w))])
+    return [getSum(i) for i in range(len(vectors[0]))]
+ 
+def makeVectorSamples(num_vecs, size, num_samples):
+    vectors = makeBasisVectors(num_vecs, size)
+    #print 'vectors', vectors
+    weights_arr = [makeWeights(num_vecs) for i in range(num_samples)]
+    #print 'weights_arr', weights_arr
+    vectors = [applyWeights(vectors, w) for w in weights_arr]
+    return vectors
+    
+def mdpTestRandom(num_vecs, size, num_samples, verbose): 
+    '''Do PCA on a data set of num_samples random vectors of length size
+       based on num_vecs basis vectors'''
+    print '--------------------------------------------------------'
+    print 'mdpTestRandom: num_vecs =', num_vecs, 'size =', size, 'num_samples =', num_samples
+    start_time = time.clock()
+       
+    x_in = makeVectorSamples(num_vecs, size, num_samples)
+    x = array(x_in)
+    if verbose: print x
+    pcanode = mdp.nodes.PCANode(svd=True, dtype='float64')
+    print pcanode
+    pcanode.train(x)
+    p = pcanode.get_projmatrix()
+    if verbose: print p
+    d = pcanode.output_dim
+    print 'output_dim', d
+    v = pcanode.explained_variance
+    print 'explained_variance', v, '****' if d < num_vecs else ''
+    print 'time =', round((time.clock() - start_time)*1000.0)/1000.0, 'seconds'
+    #assert(d == num_vecs) 
+     
+def mdpTestRandomRange(max_num_vecs, verbose):    
+    for num_vecs in range(1, max_num_vecs):
+        size = num_vecs*3
+        num_samples = size*4
+        mdpTestRandom(num_vecs, size, num_samples, verbose)
+   
+def doTests():    
+    #mdpTest()
+    if True:
+        mdpTestRandom(2, 4, 5, False)
+        mdpTestRandomRange(5, False)
+    mdpTestRandom(100, 1559, 3279, False)    # 416 sec, output_dim 96, explained_variance 0.991
+    mdpTestRandom(2, 1000,  150, False) #   8 sec    
+    mdpTestRandom(10, 1000,  150, False) # 8 sec
+    mdpTestRandom(20, 1000,  150, False) # 9 sec
+    mdpTestRandom(50, 1000,  150, False) # 11 sec
+    mdpTestRandom(100,1000,  150, False) # 15 sec
+    mdpTestRandom(2, 1000, 1500, False) #  50 sec
+    mdpTestRandom(2, 1559, 3279, False) # 170 sec
+    
+def pcaAdData(theshold_variance):   
+    h2data = csv.readCsvRaw(csv.headered_name_pp)
+    bool_data = [[float(e) for e in v[3:-1]] for v in h2data[1:]]
+    print 'bool_data', len(bool_data), len(bool_data[0])
+    csv.validateMatrix(h2data)
+        
+    x = array(bool_data)
+    for odim in range(200,1000, 50):
+        start_time = time.clock()
+        pcanode = mdp.nodes.PCANode(svd=True, output_dim = odim, dtype='float64')
+        pcanode.train(x)
+        p = pcanode.get_projmatrix()
+        d = pcanode.output_dim
+        print 'output_dim', d
+        v = pcanode.explained_variance
+        print 'explained_variance', v
+        print 'time =', round((time.clock() - start_time)*1000.0)/1000.0, 'seconds'
+        if v >= theshold_variance:
+            break
+    print 'p', len(p), len(p[0])     
+    xfd = dot(x, p)    
+    pca = [[x for x in row] for row in xfd]
+    print 'pca', len(pca), len(pca[0])    
+    pca_header = ['pca_%03d' % i for i in range(len(pca[0]))]
+    header = h2data[0][:3] + pca_header
+    num_data = [h2data[i+1][:3] + pca[i] for i in range(len(h2data)-1)] 
+    data = [header] + num_data   
+    csv.writeCsv(csv.headered_name_pp + '.pca.csv', data)
     
 if __name__=='__main__':
     describe(numpy)
     describe(scipy)
     describe(mdp)
     describe(bimdp)
-    mdpTest()
-   
+    
+    #doTests()
+    pcaAdData(0.90)
+    
+    
     
