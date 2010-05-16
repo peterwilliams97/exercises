@@ -9,9 +9,6 @@ can be read in Excel. e.g.
 
 http://spreadsheets.google.com/pub?key=tQrE7m7afhWGvFkSRPs3Agw&output=html 
 is a formatted version of such a map.csv
-
-TODO:
-    Generalize to n weights
  
 Created on 24/04/2010
 
@@ -97,7 +94,7 @@ if __name__ == '__main__':
         for i in i_in + [i_test]:
             assert(len(w)==len(i))
        
-    # Set initial weights and do <num_iterations> iterations of the algorithm
+    # Set initial weights and doh <num_iterations> iterations of the algorithm
     w = w_in
     print ',' + aa2Csv(map(lambda x: title(x[0],x[1]), column_names))
     for t in range(num_iterations):
@@ -111,4 +108,3 @@ if __name__ == '__main__':
     i = i_test
     o,d = calcOutputs(w,i)
     print 'i_test,' + aa2Csv([i,w[0],w[1],o,d])
-    
