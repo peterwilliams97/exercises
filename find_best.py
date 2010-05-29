@@ -70,9 +70,9 @@ def runMLP(in_fn, out_fn):
 	print '------------------------ 1'
 	t1 = time.time()
 	p = subprocess.Popen(cmd, stdout=out)
-	t2 = time.time()
 	print '------------------------ 2'		
 	p.wait()
+	t2 = time.time()
 	print '------------------------ 3'
 	accuracy = getAccuracy(out_fn)
 	dt = t2-t1
