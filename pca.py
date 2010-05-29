@@ -157,73 +157,7 @@ def doTests():
     mdpTestRandom(100,1000,  150, False) # 15 sec
     mdpTestRandom(2, 1000, 1500, False) #  50 sec
     mdpTestRandom(2, 1559, 3279, False) # 170 sec
-    
-def normalizeData(in_fn, out_fn):
-    "Normalize ad data to equal std dev"
-    in_cells = csv.readCsvRaw(in_fn)
-    csv.validateMatrix2(in_cells)
-   # csv.writeCsv(in_fn, in_cells[:3280])
-    #last column is ad categorie. normalize other columns
-    in_data = [[float(e.strip()) for e in row[:-1]] for row in in_cells[1:3280]]
-    print 'data', len(in_data), len(in_data[0])
-    values = array(in_data)
-    
-    def normalizeAxis(column):
-        stdev = column.std() 
-        print stdev,
-        return [e/stdev for e in column]
-    
-    # http://www.scipy.org/Numpy_Example_List#head-528347f2f13004fc0081dce432e81b87b3726a33
-    norm_values = apply_along_axis(normalizeAxis,0,values)
-    print
-    norm2_values = apply_along_axis(normalizeAxis,0,norm_values)
-    print
-    
-    out_data = [[x for x in row] for row in norm_values]
-    print 'out_data', len(out_data), len(out_data[0])  
-    out_cells = [in_cells[0]] + [out_data[i-1] + [in_cells[i][-1]] for i in range(1,len(in_cells))]  
-   
-    csv.writeCsv(out_fn, out_cells)
-    
-def rankByCorrelationWithOutcomes(in_fn):
-    "Rank each attribute by its correlation with the outcoome"
-    in_cells = csv.readCsvRaw(in_fn)
-    csv.validateMatrix(in_cells)
-    
-    name_map = {'nonad.':0.0, 'ad.':1.0}
-    def strToFloat(s):
-        return name_map[s.strip()]
-    
-    #last column is ad categorie. normalize other columns
-    in_data = [[float(e) for e in row[:-1]] for row in in_cells[1:]]
-    print 'in_data', len(in_data), len(in_data[0])
-    raw_outcomes = [strToFloat(row[-1]) for row in in_cells[1:]]
   
-    print 'outcomes', len(raw_outcomes) #,len(raw_outcomes[0])
-    values = array(in_data)
-    outcomes = array(raw_outcomes)
-    outcomes2 = array(raw_outcomes)
-    print 'cov', cov(outcomes, outcomes2)
-    
-    def covWithOutcome(column):
-       # print len(column),len(outcomes), len(column)==len(outcomes)
-       # print column[0]
-       # print 'cov', cov(column, outcomes)
-        #assert(len(column)==len(outcomes))
-        c = cov(column, outcomes)
-        return c[1][0]/sqrt(c[0][0]*c[1][1])
-    
-    # http://www.scipy.org/Numpy_Example_List#head-528347f2f13004fc0081dce432e81b87b3726a33
-    cov_with_outcomes = apply_along_axis(covWithOutcome,0,values)
-    print 'cov_with_outcomes', cov_with_outcomes
-    cov_index = [(i,c) for i,c in enumerate(cov_with_outcomes)]
-    print cov_index
-    cov_index.sort(key = lambda x: -abs(x[1])) 
-    print cov_index
-    sort_order = [x[0] for x in cov_index]
-    print sort_order
-    
-    
     
 def pcaAdData(theshold_variance):   
     "Run PCA on the boolean columns of the ad data set"
@@ -260,14 +194,91 @@ def pcaAdData(theshold_variance):
     num_data = [h2data[i+1][:3] + pca[i] for i in range(len(h2data)-1)] 
     data = [header] + num_data   
     csv.writeCsv(csv.headered_name_pca, data)
+     
     
+def normalizeData(in_fn, out_fn):
+    "Normalize ad data to equal std dev"
+    in_cells = csv.readCsvRaw(in_fn)
+    csv.validateMatrix2(in_cells)
+   # csv.writeCsv(in_fn, in_cells[:3280])
+    #last column is ad categorie. normalize other columns
+    in_data = [[float(e.strip()) for e in row[:-1]] for row in in_cells[1:3280]]
+    print 'data', len(in_data), len(in_data[0])
+    values = array(in_data)
+    
+    def normalizeAxis(column):
+        stdev = column.std() 
+        print stdev,
+        return [e/stdev for e in column]
+    
+    # http://www.scipy.org/Numpy_Example_List#head-528347f2f13004fc0081dce432e81b87b3726a33
+    norm_values = apply_along_axis(normalizeAxis,0,values)
+    print
+    norm2_values = apply_along_axis(normalizeAxis,0,norm_values)
+    print
+    
+    out_data = [[x for x in row] for row in norm_values]
+    print 'out_data', len(out_data), len(out_data[0])  
+    out_cells = [in_cells[0]] + [out_data[i-1] + [in_cells[i][-1]] for i in range(1,len(in_cells))]  
+   
+    csv.writeCsv(out_fn, out_cells)
+    
+def correlation(v1, v2):
+    "Returns correlation between vectors v1 and v2"
+    c = cov(v1, v2)
+    assert(c[0][1]==c[1][0])
+    return c[1][0]/sqrt(c[0][0]*c[1][1])    
+    
+def sortBy(vector, order):
+    "Sort vector by order"
+    assert(len(vector)==len(order))
+    return [vector[i] for i in order]    
+    
+def rankByCorrelationWithOutcomes(in_fn):
+    "Rank each attribute by its correlation with the outcoome"
+    in_cells = csv.readCsvRaw(in_fn)
+    csv.validateMatrix(in_cells)
+    
+    name_map = {'nonad.':0.0, 'ad.':1.0}
+    def strToFloat(s):
+        return name_map[s.strip()]
+    
+    #last column is ad categorie. normalize other columns
+    in_data = [[float(e) for e in row[:-1]] for row in in_cells[1:]]
+    print 'in_data', len(in_data), len(in_data[0])
+    raw_outcomes = [strToFloat(row[-1]) for row in in_cells[1:]]
+  
+    print 'outcomes', len(raw_outcomes) #,len(raw_outcomes[0])
+    values = array(in_data)
+    outcomes = array(raw_outcomes)
+    
+    def correlationWithOutcome(column):
+        return correlation(column, outcomes)
+   
+    # http://www.scipy.org/Numpy_Example_List#head-528347f2f13004fc0081dce432e81b87b3726a33
+    corr_with_outcomes = apply_along_axis(correlationWithOutcome,0,values)
+    # print 'corr_with_outcomes', corr_with_outcomes
+    corr_index = [(i,c) for i,c in enumerate(corr_with_outcomes)]
+    # print corr_index
+    corr_index.sort(key = lambda x: -abs(x[1])) 
+    # print corr_index
+    sort_order = [x[0] for x in corr_index]
+    #print sort_order
+    return sort_order
+    
+def reorderMatrix(in_cells, order):
+    "Reorder the len(order) left columns in a 2d matrix"
+    w = len(order)
+    return [sortBy(row[:w],order) + row[w:] for row in in_cells]
+        
+     
 if __name__=='__main__':
     describe(numpy)
     describe(scipy)
     describe(mdp)
     describe(bimdp)
     
-    if True:
+    if False:
         covTest()
     #doTests()
     if False:
@@ -277,5 +288,9 @@ if __name__=='__main__':
         normalizeData(csv.headered_name_pca, csv.headered_name_pca_norm)    
     
     if True:
-        rankByCorrelationWithOutcomes(csv.headered_name_pca_norm)
+        sort_order = rankByCorrelationWithOutcomes(csv.headered_name_pca_norm)
+        def reorder(in_cells):
+            return reorderMatrix(in_cells, sort_order)
+        csv.modifyCsvRaw(csv.headered_name_pca_norm, csv.headered_name_pca_corr, reorder)
+        
     

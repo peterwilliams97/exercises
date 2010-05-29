@@ -41,7 +41,13 @@ def readCsvFloat(filename):
 def writeCsv(filename,matrix):
     "Writes a 2d array to a CSV file"
     print 'writeCsv', filename, len(matrix), len(matrix[0])
-    file(filename, 'w').write('\n'.join(map(lambda row: ','.join(map(str,row)), matrix)) + '\n')  
+    file(filename, 'w').write('\n'.join(map(lambda row: ','.join(map(str,row)), matrix)) + '\n')
+    
+def modifyCsvRaw(in_filename,out_filename,modify_func):
+    "Read in_filename into a 2d array, apply modify_func to it and write result to out_filename"
+    in_entries = readCsvRaw(in_filename)
+    out_entries = modify_func(in_entries)
+    writeCsv(out_filename,out_entries)    
     
 def swapMatrixColumn(matrix, i, j):
     n = len(matrix[0])
@@ -153,7 +159,28 @@ headered_name_pp = os.path.join(data_dir,'ad1_header_pp.csv')
 # PCA on headered_name_pp
 headered_name_pca = headered_name_pp + '.pca.csv'  
 # PCA data normalized to stdev == 1
-headered_name_pca_norm = os.path.join(data_dir,'ad1_header.pp.pca.norm.csv')                   
+headered_name_pca_norm = os.path.join(data_dir,'ad1_header.pp.pca.norm.csv')            
+# PCA data normalized to stdev == 1 by correlation with outcome
+headered_name_pca_corr = os.path.join(data_dir,'ad1_header.pp.pca.norm.corr_order.csv')  
+
+def makeCsvPath(name):
+    return os.path.join(data_dir, name + '.csv')    
+
+def makeTempPath(base_name):
+    count_fn = os.path.join(data_dir, 'temp', 'count.txt') 
+    count = 0
+    try:
+        contents = file(count_fn).read().strip()
+        if len(contents) > 0:
+            count = int(contents)
+    except IOError:
+        pass
+    try:
+        os.mkdir(os.path.join(data_dir, 'temp'))
+    except WindowsError:
+        pass
+    file(count_fn, 'w').write(str(count+1))
+    return os.path.join(data_dir, 'temp', base_name + ('%06d' % count))      
      
 def prepareData():
     "Prepare data by adding a header row and replacing missing values"
