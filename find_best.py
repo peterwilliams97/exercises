@@ -86,7 +86,11 @@ def testMatrixMLP(matrix, columns):
 	temp_csv = temp_base + '.csv'
 	temp_results = temp_base + '.results'
 	csv.writeCsv(temp_csv, sub_matrix)
-	accuracy,dt = runMLP(temp_csv, temp_results)
+	test = False
+	if test:
+		accuracy,dt = random.random(), 0.1
+	else:
+		accuracy,dt = runMLP(temp_csv, temp_results)
 	return (accuracy, temp_csv, temp_results, dt)
 	
 def crossOver(c1, c2):
@@ -121,17 +125,17 @@ def findBestOfSize(matrix, num_subset, num_trials):
 		csv_results.flush()
 		return num_tried + 1
 		
-	for i in range(0, min(num_attribs, 3*num_subset), num_subset):
+	for i in range(0, num_attribs, num_subset):
 		if i + num_subset > num_attribs:
 			i = num_attribs - num_subset 
 		columns = [i+j for j in range(num_subset)]
 		num_tried = doOneRun(columns)
-		results.sort(key = lambda(r): r['accuracy'])
+		results.sort(key = lambda(r): -r['accuracy'])
 		
 	mating_size = num_tried	
 	count = 0	
 	index = 0
-	results.sort(key = lambda(r): r['accuracy'])
+	results.sort(key = lambda(r): -r['accuracy'])
 	while num_tried <= num_trials:
 		index = (index + 1) % mating_size
 		second_index = index if count % 3 == 0 else 0
@@ -141,7 +145,7 @@ def findBestOfSize(matrix, num_subset, num_trials):
 		if count % 10 == 0:
 			 mutation = random.sample(range(num_attribs), num_subset)
 			 num_tried = doOneRun(mutation)
-        results.sort(key = lambda(r): r['accuracy'])
+        results.sort(key = lambda(r): -r['accuracy'])
        
 	
 if __name__ == '__main__':
@@ -159,9 +163,15 @@ if __name__ == '__main__':
 		
 	if True:
 		matrix = csv.readCsvRaw(csv.headered_name_pca_corr)
-		num_subset = 5
-		num_trials = max(100, len(matrix)*2)
-		findBestOfSize(matrix, num_subset, num_trials)
+		num_attributes = len(matrix[0])
+		if False:
+			num_subset = 5
+			num_trials = max(100, num_attributes*2)
+			findBestOfSize(matrix, num_subset, num_trials)
+		if True:
+			for num_subset in range(5, num_attributes, 5):
+				num_trials = max(100, num_attributes*2)
+				findBestOfSize(matrix, num_subset, num_trials)
 		
 	if False:
 		out = open(out_fn, 'w')
