@@ -25,11 +25,11 @@ def covTest():
     TPcov = cov(T,P)                                # covariance between temperature and pressure
     rho = array([8.5, 5.2, 6.9, 6.5])       # corresponding density measurements
     data = column_stack([T,P,rho])
-    print T
-    print P
+    print 'T',T
+    print 'P',P
     print rho
     print data
-    print TPcov
+    print 'TPcov',TPcov
     print cov(data)                         # covariance matrix of T,P and rho
 
 def describe(module):
@@ -198,15 +198,20 @@ def rankByCorrelationWithOutcomes(in_fn):
     in_data = [[float(e) for e in row[:-1]] for row in in_cells[1:]]
     print 'in_data', len(in_data), len(in_data[0])
     raw_outcomes = [strToFloat(row[-1]) for row in in_cells[1:]]
-    print 'outcomes', len(raw_outcomes)
+  
+    print 'outcomes', len(raw_outcomes) #,len(raw_outcomes[0])
     values = array(in_data)
-    outcomes = array([raw_outcomes])
+    outcomes = array(raw_outcomes)
+    outcomes2 = array(raw_outcomes)
+    print 'cov', cov(outcomes, outcomes2)
     
     def covWithOutcome(column):
-        assert(len(column)==len(outcomes))
-        print len(column),len(outcomes), len(column)==len(outcomes)
-        print column[0]
-        return cov(column, outcomes)
+       # print len(column),len(outcomes), len(column)==len(outcomes)
+       # print column[0]
+       # print 'cov', cov(column, outcomes)
+        #assert(len(column)==len(outcomes))
+        c = cov(column, outcomes)
+        return c[1][0]/sqrt(c[0][0]*c[1][1])
     
     # http://www.scipy.org/Numpy_Example_List#head-528347f2f13004fc0081dce432e81b87b3726a33
     cov_with_outcomes = apply_along_axis(covWithOutcome,0,values)
