@@ -1,7 +1,7 @@
 """
 http://docs.python.org/library/subprocess.html
 """
-import shlex, subprocess, os, time, random, csv
+import shlex, subprocess, os, time, random, copy, csv
 
 random.seed(0)
 
@@ -86,12 +86,47 @@ def testMatrixMLP(matrix, columns):
 	temp_csv = temp_base + '.csv'
 	temp_results = temp_base + '.results'
 	csv.writeCsv(temp_csv, sub_matrix)
-	test = False
+	test = True
 	if test:
-		accuracy,dt = random.random(), 0.1
+		accuracy,dt = 1.0/float(sum([abs(x-5) for x in columns])), 0.1
 	else:
 		accuracy,dt = runMLP(temp_csv, temp_results)
 	return (accuracy, temp_csv, temp_results, dt)
+
+def spinRouletteWheel(roulette):
+	"""	Find the roulette wheel winner
+		roulette is a list of 2-tuples
+			1st val is index
+			2nd val is probabily of the index
+		Return an index with probability proportional to one specified
+	"""
+	total = float(sum([x[1] for x in roulette]))
+	v = random.randrange(total)
+	#print 'v', v, 'total', total
+	base = 0.0
+	for x in roulette:
+		top = base + x[1]
+		#print x[0], [base, top], ';',
+		if v < top:
+			#print 'result =', x[0], 'v =', v
+			return x[0]
+		base = top
+
+def testRouletteWheel():
+	num_bins = 4
+	roulette = [(i,i+1) for i in range(num_bins)]
+	print 'roulette', roulette
+	counts = [0 for i in range(num_bins)]
+	for j in range(10000):
+		k = spinRouletteWheel(roulette)
+		counts[k] = counts[k] + 1
+	print 'roulette', roulette
+	print 'counts', counts
+	ratios = [float(counts[i])/float(roulette[i][1]) for i in range(num_bins)]
+	print 'ratios', ratios
+	total = sum(ratios)
+	print 'splits', [x/total for x in ratios]
+		
 	
 def crossOver(c1, c2):
 	"Swap half the elements in c1 and c2"
@@ -99,13 +134,26 @@ def crossOver(c1, c2):
 	n = len(c1)
 	shuffle_list = random.sample(range(n), n/2)
 	d1, d2 = c1[:], c2[:]
+	# Find elements that are not in both lists
+	d1.sort(key = lambda x: x not in d2)
+	d2.sort(key = lambda x: x not in d1)
+	for i1,x in enumerate(d1):
+		if x in d2:
+			break
+	for i2,x in enumerate(d2):
+		if x in d1:
+			break
+	m = min(i1, i2)  #
+	shuffle_list = random.sample(range(m), min(n/2,m))
 	for i in shuffle_list:
 		d1[i], d2[i] = d2[i], d1[i]
+	d1.sort()
+	d2.sort()
 	return (d1, d2)	
 	
 def findBestOfSize(matrix, num_subset, num_trials):
 	"Find best result on num_subset columns of matrix entries"
-	num_attribs = len(matrix[0])
+	num_attribs = len(matrix[0])-1  # last column is category
 	print 'findBestOfSize', len(matrix), num_attribs, 'num_subset', num_subset, 'num_trials', num_trials
 	num_tried = 0
 	results = []
@@ -136,7 +184,9 @@ def findBestOfSize(matrix, num_subset, num_trials):
 	count = 0	
 	index = 0
 	results.sort(key = lambda(r): -r['accuracy'])
+	best_result = copy.deepcopy(results[0])
 	while num_tried <= num_trials:
+		roulette = [(i,1.0/(1.01-r['accuracy'])) for i,r in enumerate(results)]
 		index = (index + 1) % mating_size
 		second_index = index if count % 3 == 0 else 0
 		c1,c2 = crossOver(results[0]['columns'], results[second_index]['columns'])
@@ -146,6 +196,12 @@ def findBestOfSize(matrix, num_subset, num_trials):
 			 mutation = random.sample(range(num_attribs), num_subset)
 			 num_tried = doOneRun(mutation)
         results.sort(key = lambda(r): -r['accuracy'])
+        #
+        # !@#$ Need to terminate on convergence
+        #
+        if results[0]['accuracy'] == best_result['accuracy']:
+        	print 'Converged !!' 
+        best_result = copy.deepcopy(results[0])
        
 	
 if __name__ == '__main__':
@@ -162,14 +218,27 @@ if __name__ == '__main__':
 		runMLP(in_fn, out_fn)
 		
 	if True:
+		testRouletteWheel()
+		
+	if False:
 		matrix = csv.readCsvRaw(csv.headered_name_pca_corr)
-		num_attributes = len(matrix[0])
-		if False:
+		num_attributes = len(matrix[0])-1
+		if True:
 			num_subset = 5
 			num_trials = max(100, num_attributes*2)
 			findBestOfSize(matrix, num_subset, num_trials)
-		if True:
+		if False:
 			for num_subset in range(5, num_attributes, 5):
+				#
+				# !@#$ Should use the results of previous runs to select important attributes
+				#      Simple resorting based on best previous subset
+				#      order=[]
+				#      for r in results:
+				#         for i in r.subset:
+				#			if not i in order:
+				#				order.append(i)
+				#
+				#
 				num_trials = max(100, num_attributes*2)
 				findBestOfSize(matrix, num_subset, num_trials)
 		
