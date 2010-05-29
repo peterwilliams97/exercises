@@ -216,6 +216,12 @@ def rankByCorrelationWithOutcomes(in_fn):
     # http://www.scipy.org/Numpy_Example_List#head-528347f2f13004fc0081dce432e81b87b3726a33
     cov_with_outcomes = apply_along_axis(covWithOutcome,0,values)
     print 'cov_with_outcomes', cov_with_outcomes
+    cov_index = [(i,c) for i,c in enumerate(cov_with_outcomes)]
+    print cov_index
+    cov_index.sort(key = lambda x: -abs(x[1])) 
+    print cov_index
+    sort_order = [x[0] for x in cov_index]
+    print sort_order
     
     
     
