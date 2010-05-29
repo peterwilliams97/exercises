@@ -15,6 +15,14 @@ def validateMatrix(matrix):
     assert(len(matrix[0]) > 0)
     for i in range(1, len(matrix)):
         assert(len(matrix[i]) == len(matrix[0]))
+        
+def validateMatrix2(matrix):
+    "Check that all rows in matrix and same length and non-empty"
+    validateMatrix(matrix)
+    for i,row in enumerate(matrix):
+        for j,val in enumerate(row):
+            if len(val) == 0:
+                print 'empty cell', i, j        
   
 def readCsvRaw(filename): 
     "Reads a CSV file into a 2d array"

@@ -22,13 +22,14 @@ def covTest():
     variance = cov(x, bias=1)               # normalized by N
     T = array([1.3, 4.5, 2.8, 3.9])         # temperature measurements
     P = array([2.7, 8.7, 4.7, 8.2])         # corresponding pressure measurements
-    cov(T,P)                                # covariance between temperature and pressure
+    TPcov = cov(T,P)                                # covariance between temperature and pressure
     rho = array([8.5, 5.2, 6.9, 6.5])       # corresponding density measurements
     data = column_stack([T,P,rho])
     print T
     print P
     print rho
     print data
+    print TPcov
     print cov(data)                         # covariance matrix of T,P and rho
 
 def describe(module):
@@ -160,9 +161,10 @@ def doTests():
 def normalizeData(in_fn, out_fn):
     "Normalize ad data to equal std dev"
     in_cells = csv.readCsvRaw(in_fn)
-    csv.validateMatrix(in_cells)
+    csv.validateMatrix2(in_cells)
+   # csv.writeCsv(in_fn, in_cells[:3280])
     #last column is ad categorie. normalize other columns
-    in_data = [[float(e) for e in row[:-1]] for row in in_cells[1:]]
+    in_data = [[float(e.strip()) for e in row[:-1]] for row in in_cells[1:3280]]
     print 'data', len(in_data), len(in_data[0])
     values = array(in_data)
     
@@ -179,12 +181,41 @@ def normalizeData(in_fn, out_fn):
     
     out_data = [[x for x in row] for row in norm_values]
     print 'out_data', len(out_data), len(out_data[0])  
-    out_cells = [in_cells[0]] + out_data  
+    out_cells = [in_cells[0]] + [out_data[i-1] + [in_cells[i][-1]] for i in range(1,len(in_cells))]  
    
     csv.writeCsv(out_fn, out_cells)
     
+def rankByCorrelationWithOutcomes(in_fn):
+    "Rank each attribute by its correlation with the outcoome"
+    in_cells = csv.readCsvRaw(in_fn)
+    csv.validateMatrix(in_cells)
+    
+    name_map = {'nonad.':0.0, 'ad.':1.0}
+    def strToFloat(s):
+        return name_map[s.strip()]
+    
+    #last column is ad categorie. normalize other columns
+    in_data = [[float(e) for e in row[:-1]] for row in in_cells[1:]]
+    print 'in_data', len(in_data), len(in_data[0])
+    raw_outcomes = [strToFloat(row[-1]) for row in in_cells[1:]]
+    print 'outcomes', len(raw_outcomes)
+    values = array(in_data)
+    outcomes = array([raw_outcomes])
+    
+    def covWithOutcome(column):
+        assert(len(column)==len(outcomes))
+        print len(column),len(outcomes), len(column)==len(outcomes)
+        print column[0]
+        return cov(column, outcomes)
+    
+    # http://www.scipy.org/Numpy_Example_List#head-528347f2f13004fc0081dce432e81b87b3726a33
+    cov_with_outcomes = apply_along_axis(covWithOutcome,0,values)
+    print 'cov_with_outcomes', cov_with_outcomes
+    
+    
+    
 def pcaAdData(theshold_variance):   
-    "Run PCA on the boolean column of the ad data set"
+    "Run PCA on the boolean columns of the ad data set"
     h2data = csv.readCsvRaw(csv.headered_name_pp)
     csv.validateMatrix(h2data)
     
@@ -225,12 +256,15 @@ if __name__=='__main__':
     describe(mdp)
     describe(bimdp)
     
+    if True:
+        covTest()
     #doTests()
     if False:
         pcaAdData(0.90)
         
-    if True:
+    if False:
         normalizeData(csv.headered_name_pca, csv.headered_name_pca_norm)    
     
-    
+    if True:
+        rankByCorrelationWithOutcomes(csv.headered_name_pca_norm)
     
