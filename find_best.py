@@ -3,7 +3,7 @@ http://docs.python.org/library/subprocess.html
 """
 import shlex, subprocess, os, csv
 
-if False:
+def dumpEnv():
 	for param in os.environ.keys():
 		print "%20s %s" % (param,os.environ[param])
 		
@@ -23,70 +23,80 @@ def getAccuracy(fn):
 						print i, ':', s
 				accuracy = float(terms[4])
 	return accuracy
+
+
 	
-weka_root = os.environ['WEKA_ROOT']	
-weka_jar = weka_root + '\\weka.jar'
-weka_mlp = 'weka.classifiers.functions.MultilayerPerceptron'
-weka_args = '-H "a,2"'
-weka  
+def preprocess():
+	"Add headers and pre-process the data. This needs to be done once"
+	header = makeHeader()
+	data = readCsvRaw(raw_name)
+    
+	hdata = [header] + data
+	assert(len(hdata)==len(data)+1)
+	validateMatrix(hdata)
+
+	#swapMatrixColumn(data, 3, -1)
+	writeCsv(headered_name, hdata)
+	h2data = readCsvRaw(headered_name)
+    
+	replaceMissingValues(hdata)
+	writeCsv(headered_name_pp, hdata)
+	
+# Locations of Weka files on my computer. This will need to be customized
+# for each computer that runs this program	
+if True:
+	
+	weka_root = os.environ['WEKA_ROOT']	
+	weka_jar = os.path.join(weka_root, 'weka.jar')
+	weka_mlp = 'weka.classifiers.functions.MultilayerPerceptron'
+	mlp_opts = ' -H "a,2" '
+ 	
 	
 def runMLP(in_fn, out_fn):
-	cmd = 'java -cp ' + weka_root + ' ' + weka_mlp + ' -H "a,2"  + -t ' + in_fn"
+	""" Run the Weka MultilayerPerceptron with options mlp_opts on the data in in_fn
+		Write data to file out_fn
+	"""
+	if not os.path.exists(weka_jar):
+		print 'Weka jar', weka_jar, ' does not exist'
+		exit()
+	if not os.path.exists(in_fn):
+		print 'Input file', in_fn, ' does not exist'
+		exit()
+			
+	cmd = 'java -cp ' + weka_jar  + ' ' + weka_mlp + mlp_opts + ' -t ' + in_fn
+	
 	# args = 'java -cp ' + weka_root + ' ' + weka_mlp + ' -H "a,2"  + -t "data\pima_indians_diabetes.arff"'
 	out = open(out_fn, 'w')
-	err = open(err_fn, 'w')
-	print args
+	print cmd
 	print '------------------------ 1'
-	p = subprocess.Popen(args, stdout=out, stderr=err)
-	print '------------------------ 2xx'		
+	p = subprocess.Popen(cmd, stdout=out)
+	print '------------------------ 2'		
 	p.wait()
 	print '------------------------ 3'
 
-out_fn = 'tmp.out.txt'
-err_fn = 'tmp.err.txt'
-
-runMLP(in_fn, out_fn)
-if False:
-
-	out = open(out_fn, 'w')
-	err = open(err_fn, 'w')
-	print args
-	print '------------------------ 1'
-	p = subprocess.Popen(args, stdout=out, stderr=err)
-	print '------------------------ 2xx'		
-	p.wait()
-	print '------------------------ 3'
-	
-#
-# The data we are working on
-#
-
-# Input data - Don't touch this	
-raw_name = 'C:\\dev\\5047assigment1\\ad1.csv'
-
-# Add heade
-headered_name = 'C:\\dev\\5047assigment1\\ad1_header.csv'
-headered_name_pp = 'C:\\dev\\5047assigment1\\ad1_header_pp.csv'
-	
-def preprocess
 	
 if __name__ == '__main__':
-	raw_name = 'C:\\dev\\5047assigment1\\ad1.csv'
-    headered_name = 'C:\\dev\\5047assigment1\\ad1_header.csv'
-    headered_name_pp = 'C:\\dev\\5047assigment1\\ad1_header_pp.csv'
-    header = makeHeader()
-    data = readCsvRaw(raw_name)
-    
-    hdata = [header] + data
-    assert(len(hdata)==len(data)+1)
-    validateMatrix(hdata)
-
-    #swapMatrixColumn(data, 3, -1)
-    writeCsv(headered_name, hdata)
-    h2data = readCsvRaw(headered_name)
-    
-    replaceMissingValues(hdata)
-    writeCsv(headered_name_pp, hdata)
+	
+	if False:
+		dumpEnv()
+		
+	if False:  # Do this once. Then use headered_name_pp
+		preprocess()
+	
+	if True:
+		out_fn = 'tmp.out.txt'
+		in_fn = csv.headered_name_pca
+		runMLP(in_fn, out_fn)
+		
+	if False:
+		out = open(out_fn, 'w')
+		err = open(err_fn, 'w')
+		print args
+		print '------------------------ 1'
+		p = subprocess.Popen(args, stdout=out, stderr=err)
+		print '------------------------ 2xx'		
+		p.wait()
+		print '------------------------ 3'
 					
 					
 					

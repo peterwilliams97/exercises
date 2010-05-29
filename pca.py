@@ -157,14 +157,45 @@ def doTests():
     mdpTestRandom(2, 1000, 1500, False) #  50 sec
     mdpTestRandom(2, 1559, 3279, False) # 170 sec
     
+def normalizeData(in_fn, out_fn):
+    "Normalize ad data to equal std dev"
+    in_cells = csv.readCsvRaw(in_fn)
+    csv.validateMatrix(in_cells)
+    #last column is ad categorie. normalize other columns
+    in_data = [[float(e) for e in row[:-1]] for row in in_cells[1:]]
+    print 'data', len(in_data), len(in_data[0])
+    values = array(in_data)
+    
+    def normalizeAxis(column):
+        stdev = column.std() 
+        print stdev,
+        return [e/stdev for e in column]
+    
+    # http://www.scipy.org/Numpy_Example_List#head-528347f2f13004fc0081dce432e81b87b3726a33
+    norm_values = apply_along_axis(normalizeAxis,0,values)
+    print
+    norm2_values = apply_along_axis(normalizeAxis,0,norm_values)
+    print
+    
+    out_data = [[x for x in row] for row in norm_values]
+    print 'out_data', len(out_data), len(out_data[0])  
+    out_cells = [in_cells[0]] + out_data  
+   
+    csv.writeCsv(out_fn, out_cells)
+    
 def pcaAdData(theshold_variance):   
+    "Run PCA on the boolean column of the ad data set"
     h2data = csv.readCsvRaw(csv.headered_name_pp)
+    csv.validateMatrix(h2data)
+    
+    # Boolean data are columns 3 to second last
     bool_data = [[float(e) for e in v[3:-1]] for v in h2data[1:]]
     print 'bool_data', len(bool_data), len(bool_data[0])
-    csv.validateMatrix(h2data)
-        
     x = array(bool_data)
-    for odim in range(200,1000, 50):
+    
+    # Find the output dimension (#basis vectors) required to explain
+    # threshold_variance
+    for odim in range(200, 1000, 50):
         start_time = time.clock()
         pcanode = mdp.nodes.PCANode(svd=True, output_dim = odim, dtype='float64')
         pcanode.train(x)
@@ -176,7 +207,9 @@ def pcaAdData(theshold_variance):
         print 'time =', round((time.clock() - start_time)*1000.0)/1000.0, 'seconds'
         if v >= theshold_variance:
             break
-    print 'p', len(p), len(p[0])     
+    print 'p', len(p), len(p[0]) 
+    
+    # Project out data onto PCA components    
     xfd = dot(x, p)    
     pca = [[x for x in row] for row in xfd]
     print 'pca', len(pca), len(pca[0])    
@@ -184,7 +217,7 @@ def pcaAdData(theshold_variance):
     header = h2data[0][:3] + pca_header
     num_data = [h2data[i+1][:3] + pca[i] for i in range(len(h2data)-1)] 
     data = [header] + num_data   
-    csv.writeCsv(csv.headered_name_pp + '.pca.csv', data)
+    csv.writeCsv(csv.headered_name_pca, data)
     
 if __name__=='__main__':
     describe(numpy)
@@ -193,7 +226,11 @@ if __name__=='__main__':
     describe(bimdp)
     
     #doTests()
-    pcaAdData(0.90)
+    if False:
+        pcaAdData(0.90)
+        
+    if True:
+        normalizeData(csv.headered_name_pca, csv.headered_name_pca_norm)    
     
     
     

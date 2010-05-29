@@ -5,7 +5,7 @@ Clean advertisement detection trainging set file
 Peter
 16/05/2010
 '''
-import copy
+import copy,os
 from math import *
 from operator import itemgetter
 
@@ -32,6 +32,7 @@ def readCsvFloat(filename):
 
 def writeCsv(filename,matrix):
     "Writes a 2d array to a CSV file"
+    print 'writeCsv', filename, len(matrix), len(matrix[0])
     file(filename, 'w').write('\n'.join(map(lambda row: ','.join(map(str,row)), matrix)) + '\n')  
     
 def swapMatrixColumn(matrix, i, j):
@@ -129,12 +130,25 @@ def replaceMissingValues(matrix):
             for v in matrix[1:]: 
                 if isMissingValue(v[i]):
                     v[i] = replacement          
-                         
+    
+#
+# The data we are working on
+#           
+# Data directory
+data_dir = 'C:\\dev\\5167assigment1'           
+# Input data - Don't touch this    
+raw_name = os.path.join(data_dir,'ad1.csv')
+# Input data with header. Needs to be generated once
+headered_name = os.path.join(data_dir,'ad1_header.csv')
+#Input data with header and pre-processing
+headered_name_pp = os.path.join(data_dir,'ad1_header_pp.csv')   
+# PCA on headered_name_pp
+headered_name_pca = headered_name_pp + '.pca.csv'  
+# PCA data normalized to stdev == 1
+headered_name_pca_norm = os.path.join(data_dir,'ad1_header.pp.pca.norm.csv')                   
      
-if __name__ == '__main__':
-    raw_name = 'C:\\dev\\5047assigment1\\ad1.csv'
-    headered_name = 'C:\\dev\\5047assigment1\\ad1_header.csv'
-    headered_name_pp = 'C:\\dev\\5047assigment1\\ad1_header_pp.csv'
+def prepareData():
+    "Prepare data by adding a header row and replacing missing values"
     header = makeHeader()
     data = readCsvRaw(raw_name)
     
@@ -149,4 +163,7 @@ if __name__ == '__main__':
     replaceMissingValues(hdata)
     writeCsv(headered_name_pp, hdata)
     
+    
+if __name__ == '__main__':
+    prepareData()    
    
