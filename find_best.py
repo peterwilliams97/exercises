@@ -51,8 +51,8 @@ if True:
 	weka_root = os.environ['WEKA_ROOT']	
 	weka_jar = os.path.join(weka_root, 'weka.jar')
 	weka_mlp = 'weka.classifiers.functions.MultilayerPerceptron'
-	mlp_opts = ' -H "a,2" -x 4'
- 	
+	# mlp_opts = ' -H "a,2" -x 4'
+ 	mlp_opts = ' -H "a" -x 4'
 	
 def runMLP(in_fn, out_fn):
 	""" Run the Weka MultilayerPerceptron with options mlp_opts on the data in in_fn
