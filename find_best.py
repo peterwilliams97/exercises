@@ -80,41 +80,80 @@ def runMLP(in_fn, out_fn):
 
 
 def testMatrixMLP(matrix, columns):
-	c_x = columns + [-1]
+	"Run MLP on attributes with index in columns"
+	c_x = columns + [-1]      # include outcome
 	sub_matrix = [[row[i] for i in c_x] for row in matrix]
 	temp_base = csv.makeTempPath('subset'+('%03d'%len(columns))+'_')
 	temp_csv = temp_base + '.csv'
 	temp_results = temp_base + '.results'
 	csv.writeCsv(temp_csv, sub_matrix)
-	test = False
+	test = True
 	if test:
 		accuracy,dt = 1.0/float(sum([abs(x-5) for x in columns])), 0.1
 	else:
 		accuracy,dt = runMLP(temp_csv, temp_results)
 	return (accuracy, temp_csv, temp_results, dt)
 
-def spinRouletteWheel(roulette):
+def makeRankings(roulette):
+	"Rankings for use in roulette"
+	ranks = copy.deepcopy(roulette)
+	ranks.sort(key = lambda x: -x['val'])
+	ratio = 0.5
+	for i,x in enumerate(ranks):
+		x['weight'] = ratio**(i+1)
+	ranks.sort(key = lambda x: -x['weight'])
+	return ranks
+		
+	
+def spinRouletteWheel(roulette_in):
 	"""	Find the roulette wheel winner
 		roulette is a list of 2-tuples
 			1st val is index
-			2nd val is probabily of the index
+			2nd val is probability of the index
 		Return an index with probability proportional to one specified
 	"""
-	total = float(sum([x[1] for x in roulette]))
+	show = False
+	roulette = makeRankings(roulette_in)
+	if show:
+		print '--------------------'
+		print 'roulette', roulette
+	total = float(sum([x['weight'] for x in roulette]))
 	v = total*random.random()
 	#print 'v', v, 'total', total
 	base = 0.0
 	for x in roulette:
-		top = base + x[1]
+		top = base + float(x['weight'])
 		#print x[0], [base, top], ';',
-		if v < top:
-			#print 'result =', x[0], 'v =', v
-			return x[0]
+		if v <= top:
+			if show:
+				print '--------------------'
+				print 'roulette winner', x, v, total
+			return x['idx']
 		base = top
+	# If we get here something is wrong, so dump out state
+	print '------------------- spinRouletteWheel -----------------'
+	print 'v', v, 'total', total
+	print 'roulette', roulette
+	print 'ranges', 
+	base = 0.0
+	for x in roulette:
+		print base,
+		base = base + float(x['weight'])
+	print base
+	
+def spinRouletteWheelTwice(roulette):
+	while True:
+		i1 = spinRouletteWheel(roulette)
+		i2 = spinRouletteWheel(roulette)	
+		if i2 != i1:
+			return (i1,i2)
+
+def myRound(x):
+	return float(int(round(x*100.0)))/100.0
 
 def testRouletteWheel():
-	num_bins = 4
-	roulette = [(i,i+1) for i in range(num_bins)]
+	num_bins = 10
+	roulette = [{'idx':i, 'val':num_bins-i} for i in range(num_bins)]
 	print 'roulette', roulette
 	counts = [0 for i in range(num_bins)]
 	for j in range(10000):
@@ -122,20 +161,40 @@ def testRouletteWheel():
 		counts[k] = counts[k] + 1
 	print 'roulette', roulette
 	print 'counts', counts
-	ratios = [float(counts[i])/float(roulette[i][1]) for i in range(num_bins)]
-	print 'ratios', ratios
-	total = sum(ratios)
-	print 'splits', [x/total for x in ratios]
+	total = sum(counts)
+	print 'splits', [myRound(float(x)/total) for x in counts]
+	
+def testRouletteWheelTwice():
+	num_bins = 10
+	roulette = [{'idx':i, 'val':num_bins-i} for i in range(num_bins)]
+	print 'roulette', roulette
+	counts = [0 for i in range(num_bins)]
+	for j in range(10000):
+		k1,k2 = spinRouletteWheelTwice(roulette)
+		counts[k1] = counts[k1] + 1
+		counts[k2] = counts[k2] + 1
+	print 'roulette', roulette
+	print 'counts', counts
+	total = sum(counts)
+	print 'splits', [myRound(float(x)/total) for x in counts]	
 		
-def mutate(columns, max_idx):
+def mutate(columns, number_indexes):
 	"Apply a random mutation to a list of columns"
 	d = columns[:]
 	while True:
-		n = random.randint(0, max_idx)
+		n = random.randint(0, number_indexes-1)
 		if not n in d:
-			d[random.randint(0,len(d))] = n
+			d[random.randint(0, len(d)-1)] = n
 			return d
-			
+
+def testMutate():
+	columns = [x for x in range(5)]
+	mutation0 = columns[:]
+	for i in range(10000):
+		mutation1 = mutate(mutation0, 100)
+		if mutation1 == columns:
+			break
+		mutation0 = mutation1[:]
 		
 def crossOver(c1, c2):
 	"Swap half the elements in c1 and c2"
@@ -144,14 +203,18 @@ def crossOver(c1, c2):
 	#shuffle_list = random.sample(range(n), n/2)
 	d1, d2 = c1[:], c2[:]
 	# Find elements that are not in both lists
-	d1.sort(key = lambda x: x not in d2)
-	d2.sort(key = lambda x: x not in d1)
+	d1.sort(key = lambda x: x in d2)
+	d2.sort(key = lambda x: x in d1)
+	#print 'xover', (d1,d2)
 	for i1,x in enumerate(d1):
 		if x in d2:
+			#print x, 'in', d2
 			break
 	for i2,x in enumerate(d2):
 		if x in d1:
+			#print x, 'in', d1
 			break
+	#print 'xover', (i1,i2)
 	m = min(i1, i2)  #
 	shuffle_list = random.sample(range(m), min(n/2,m))
 	for i in shuffle_list:
@@ -159,6 +222,17 @@ def crossOver(c1, c2):
 	d1.sort()
 	d2.sort()
 	return (d1, d2)	
+
+def testCrossOver():
+	num_cpts = 5
+	c1 = [i for i in range(num_cpts)]
+	c2 = [i+num_cpts for i in range(num_cpts)]
+	for i in range(10):
+		d1,d2 = crossOver(c1,c1)
+		print 'crossOver', (c1,c1), '=>', (d1,d2)
+	for i in range(10):
+		d1,d2 = crossOver(c1,c2)
+		print 'crossOver', (c1,c2), '=>', (d1,d2)
 	
 def findBestOfSize(matrix, num_subset, num_trials):
 	"Find best result on num_subset columns of matrix entries"
@@ -169,13 +243,16 @@ def findBestOfSize(matrix, num_subset, num_trials):
 	csv_results_name = csv.makeCsvPath('subset'+('%03d'%num_subset))
 	csv_results = file(csv_results_name, 'w')
 	
-	def doOneRun(columns):
+	def doOneRun(columns, show):
 		accuracy, temp_csv, temp_results,duration = testMatrixMLP(matrix,columns)
 		r = {'num':num_subset, 'accuracy':accuracy, 'columns':columns,'csv':temp_csv, 'results':temp_results, 'duration':duration, 'index':num_tried}
 		results.append(r)
-		print num_subset, num_tried, accuracy, columns, temp_csv, temp_results, duration, 'seconds'
-		for i in range(min(3,len(results))):
-			print '  ', results[i]
+		results.sort(key = lambda r: -r['accuracy'])
+		if show:
+			print num_tried, ':', num_subset, accuracy, columns, duration, 'seconds', len(results)
+			for i in range(min(3,len(results))):
+				rr = results[i]
+				print '    ',i, ':', rr['accuracy'],rr['columns'],rr['accuracy']
 		summary = [num_subset, num_tried, accuracy, '"' + str(columns) + '"', temp_csv, temp_results, duration]
 		csv_line = ','.join([str(e) for e in summary])
 		csv_results.write(csv_line + '\n')
@@ -186,31 +263,34 @@ def findBestOfSize(matrix, num_subset, num_trials):
 		if i + num_subset > num_attribs:
 			i = num_attribs - num_subset 
 		columns = [i+j for j in range(num_subset)]
-		num_tried = doOneRun(columns)
-		results.sort(key = lambda(r): -r['accuracy'])
+		num_tried = doOneRun(columns, False)
+		results.sort(key = lambda r: -r['accuracy'])
+		print '++++', len(results)
 		
-	mating_size = num_tried	
-	results.sort(key = lambda(r): -r['accuracy'])
-	best_result = copy.deepcopy(results[0])
+	# start the ga
+	ga_base = num_tried
+		
 	while num_tried <= num_trials:
-		roulette = [(i,1.0/(1.01-r['accuracy'])) for i,r in enumerate(results)]
-		i1 = spinRouletteWheel(roulette)
-		i2 = spinRouletteWheel(roulette)
-		if i1 != i2:
+		roulette = [{'idx':i, 'val':r['accuracy']} for i,r in enumerate(results)]
+		i1,i2 = spinRouletteWheelTwice(roulette)
+		if not random.randrange(20) == 1:
+			print 'cross over', i1, i2
 			c1,c2 = crossOver(results[i1]['columns'], results[i2]['columns'])
-			num_tried = doOneRun(c1)
-			num_tried = doOneRun(c2)
+			num_tried = doOneRun(c1, True)
+			num_tried = doOneRun(c2, True)
 		else:
-			 mutation = mutate(results[i1]['columns'], num_attributes)
-			 num_tried = doOneRun(mutation)
-        results.sort(key = lambda(r): -r['accuracy'])
-        #
-        # !@#$ Need to terminate on convergence
-        #
-        if results[0]['accuracy'] == best_result['accuracy']:
-        	print 'Converged !!' 
-        best_result = copy.deepcopy(results[0])
-       
+			print 'mutate', i1
+			mutation = mutate(results[i1]['columns'], num_attributes)
+			num_tried = doOneRun(mutation, True)
+		converged = True
+		for i in range(1,3):
+			if not results[0]['accuracy'] == results[i]['accuracy']:
+				converged = False
+				break
+		if converged:
+			print 'Converged after', num_tried - ga_base, 'GA rounds'
+			break
+	    
 	
 if __name__ == '__main__':
 	
@@ -225,8 +305,11 @@ if __name__ == '__main__':
 		in_fn = csv.headered_name_pca
 		runMLP(in_fn, out_fn)
 		
-	if True:
+	if False:
 		testRouletteWheel()
+		testRouletteWheelTwice()
+		testMutate()
+		testCrossOver()
 		
 	if True:
 		matrix = csv.readCsvRaw(csv.headered_name_pca_corr)
