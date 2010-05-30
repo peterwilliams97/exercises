@@ -1,7 +1,7 @@
 """
 http://docs.python.org/library/subprocess.html
 """
-import shlex, subprocess, os, time, random, copy, csv
+import shlex, subprocess, os, time, random, copy, csv, pca
 
 random.seed(0)
 
@@ -87,9 +87,9 @@ def testMatrixMLP(matrix, columns):
 	temp_csv = temp_base + '.csv'
 	temp_results = temp_base + '.results'
 	csv.writeCsv(temp_csv, sub_matrix)
-	test = True
+	test = False
 	if test:
-		accuracy,dt = 1.0/float(sum([abs(x-5) for x in columns])), 0.1
+		accuracy,dt = 1.0/float(sum([abs(x-len(columns)/2) for x in columns])), 0.1
 	else:
 		accuracy,dt = runMLP(temp_csv, temp_results)
 	return (accuracy, temp_csv, temp_results, dt)
@@ -263,7 +263,7 @@ def findBestOfSize(matrix, num_subset, num_trials):
 		if i + num_subset > num_attribs:
 			i = num_attribs - num_subset 
 		columns = [i+j for j in range(num_subset)]
-		num_tried = doOneRun(columns, False)
+		num_tried = doOneRun(columns, True)
 		results.sort(key = lambda r: -r['accuracy'])
 		print '++++', len(results)
 		
@@ -290,8 +290,21 @@ def findBestOfSize(matrix, num_subset, num_trials):
 		if converged:
 			print 'Converged after', num_tried - ga_base, 'GA rounds'
 			break
-	    
+	return results
 	
+def orderByResults(results, num_attributes):
+	order = []
+	for r in results:
+		for i in r['columns']:
+			if not i in order:
+				order.append(i)	
+	for i in range(num_attributes):
+		if not i in order:
+			order.append(i) 
+	assert(len(order) == num_attributes)
+	print 'orderByResults', num_attributes, order
+	return order
+
 if __name__ == '__main__':
 	
 	if False:
@@ -314,24 +327,18 @@ if __name__ == '__main__':
 	if True:
 		matrix = csv.readCsvRaw(csv.headered_name_pca_corr)
 		num_attributes = len(matrix[0])-1
-		if True:
+		if False:
 			num_subset = 5
 			num_trials = max(100, num_attributes*2)
-			findBestOfSize(matrix, num_subset, num_trials)
-		if False:
+			results = findBestOfSize(matrix, num_subset, num_trials)
+			order = orderByResults(results,num_attributes)
+		if True:
+			sort_order = [i for i in range(num_attributes)]
 			for num_subset in range(5, num_attributes, 5):
-				#
-				# !@#$ Should use the results of previous runs to select important attributes
-				#      Simple resorting based on best previous subset
-				#      order=[]
-				#      for r in results:
-				#         for i in r.subset:
-				#			if not i in order:
-				#				order.append(i)
-				#
-				#
 				num_trials = max(100, num_attributes*2)
-				findBestOfSize(matrix, num_subset, num_trials)
+				ordered_matrix = pca.reorderMatrix(matrix, sort_order)
+				results = findBestOfSize(ordered_matrix, num_subset, num_trials)
+				sort_order = orderByResults(results,num_attributes)
 		
 	if False:
 		out = open(out_fn, 'w')
