@@ -277,11 +277,16 @@ def findBestOfSize(matrix, num_subset, num_trials, csv_results_name):
 		roulette = [{'idx':i, 'val':r['accuracy']} for i,r in enumerate(results)]
 		existing_columns = [r['columns'] for r in results]
 		if not random.randrange(20) == 1:
+			found = False
 			for j in range(1000):
 				i1,i2 = spinRouletteWheelTwice(roulette)
 				c1,c2 = crossOver(results[i1]['columns'], results[i2]['columns'])
 				if not c1 in existing_columns and not c2 in existing_columns and not c1==c2:
+					found = True
 					break
+			if not found:
+				print 'Converged after', num_tried - ga_base, 'GA rounds'
+				break
 			print 'cross over', i1, i2, '-', j+1, 'tries'
 			num_tried = doOneRun(c1, True)
 			num_tried = doOneRun(c2, True)
@@ -295,7 +300,6 @@ def findBestOfSize(matrix, num_subset, num_trials, csv_results_name):
 			num_tried = doOneRun(c1, True)
 		# Test for convergence
 		convergence_number = 10
-		converged = False
 		history_of_best.append(results[0]['accuracy'])
 		if len(history_of_best) >= convergence_number:
 			converged = True
@@ -303,9 +307,9 @@ def findBestOfSize(matrix, num_subset, num_trials, csv_results_name):
 				if not history_of_best[i] == history_of_best[0]:
 					converged = False
 					break
-		if converged:
-			print 'Converged after', num_tried - ga_base, 'GA rounds'
-			break
+			if converged:
+				print 'Converged after', num_tried - ga_base, 'GA rounds'
+				break
 		
 	return results
 	
