@@ -169,17 +169,29 @@ def makeCsvPath(name):
 def makeTempPath(base_name):
     count_fn = os.path.join(data_dir, 'temp', 'count.txt') 
     count = 0
-    try:
-        contents = file(count_fn).read().strip()
-        if len(contents) > 0:
-            count = int(contents)
-    except IOError:
-        pass
+    num_retries = 10
+    
+    for i in range(num_retries):
+        try:
+            contents = file(count_fn).read().strip()
+            if len(contents) > 0:
+                count = int(contents)
+            break
+        except IOError:
+            time.sleep(0.1)
+    
     try:
         os.mkdir(os.path.join(data_dir, 'temp'))
     except WindowsError:
         pass
-    file(count_fn, 'w').write(str(count+1))
+    
+    for i in range(num_retries):
+        try:
+            file(count_fn, 'w').write(str(count+1))
+            break
+        except IOError:
+            time.sleep(0.11)
+            
     return os.path.join(data_dir, 'temp', base_name + ('%06d' % count))      
      
 def prepareData():

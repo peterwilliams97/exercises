@@ -234,13 +234,13 @@ def testCrossOver():
 		d1,d2 = crossOver(c1,c2)
 		print 'crossOver', (c1,c2), '=>', (d1,d2)
 	
-def findBestOfSize(matrix, num_subset, num_trials):
+def findBestOfSize(matrix, num_subset, num_trials, csv_results_name):
 	"Find best result on num_subset columns of matrix entries"
 	num_attribs = len(matrix[0])-1  # last column is category
 	print 'findBestOfSize', len(matrix), num_attribs, 'num_subset', num_subset, 'num_trials', num_trials
 	num_tried = 0
 	results = []
-	csv_results_name = csv.makeCsvPath('subset'+('%03d'%num_subset))
+	
 	csv_results = file(csv_results_name, 'w')
 	
 	def doOneRun(columns, show):
@@ -249,10 +249,10 @@ def findBestOfSize(matrix, num_subset, num_trials):
 		results.append(r)
 		results.sort(key = lambda r: -r['accuracy'])
 		if show:
-			print num_tried, ':', num_subset, accuracy, columns, duration, 'seconds', len(results)
+			print num_tried, ':', num_subset, accuracy, int(duration), 'seconds', len(results), columns 
 			for i in range(min(3,len(results))):
 				rr = results[i]
-				print '    ',i, ':', rr['accuracy'],rr['columns'],rr['accuracy']
+				print '    ',i, ':', rr['accuracy'],rr['columns'], int(rr['duration'])
 		summary = [num_subset, num_tried, accuracy, '"' + str(columns) + '"', temp_csv, temp_results, duration]
 		csv_line = ','.join([str(e) for e in summary])
 		csv_results.write(csv_line + '\n')
@@ -265,31 +265,44 @@ def findBestOfSize(matrix, num_subset, num_trials):
 		columns = [i+j for j in range(num_subset)]
 		num_tried = doOneRun(columns, True)
 		results.sort(key = lambda r: -r['accuracy'])
-		print '++++', len(results)
 		
-	# start the ga
+	# start the Genetic Algorithm
 	ga_base = num_tried
+	history_of_best = []
 		
 	while num_tried <= num_trials:
 		roulette = [{'idx':i, 'val':r['accuracy']} for i,r in enumerate(results)]
-		i1,i2 = spinRouletteWheelTwice(roulette)
+		existing_columns = [r['columns'] for r in results]
 		if not random.randrange(20) == 1:
-			print 'cross over', i1, i2
-			c1,c2 = crossOver(results[i1]['columns'], results[i2]['columns'])
+			for j in range(1000):
+				i1,i2 = spinRouletteWheelTwice(roulette)
+				c1,c2 = crossOver(results[i1]['columns'], results[i2]['columns'])
+				if not c1 in existing_columns and not c2 in existing_columns:
+					break
+			print 'cross over', i1, i2, 'took', j, 'tries'
 			num_tried = doOneRun(c1, True)
 			num_tried = doOneRun(c2, True)
 		else:
-			print 'mutate', i1
-			mutation = mutate(results[i1]['columns'], num_attributes)
-			num_tried = doOneRun(mutation, True)
+			for j in range(1000):
+				i1 = spinRouletteWheel(roulette)
+				c1 = mutate(results[i1]['columns'], num_attributes)
+				if not c1 in existing_columns:
+					break
+			print 'mutation', i1,'took', j, 'tries'
+			num_tried = doOneRun(c1, True)
+		# Test for convergence
+		convergence_number = 10
 		converged = True
-		for i in range(1,3):
-			if not results[0]['accuracy'] == results[i]['accuracy']:
-				converged = False
-				break
+		history_of_best.append(results[0]['accuracy'])
+		if len(history_of_best) >= convergence_number:
+			for i in range(1,convergence_number):
+				if not history_of_best[i] == history_of_best[0]:
+					converged = False
+					break
 		if converged:
 			print 'Converged after', num_tried - ga_base, 'GA rounds'
 			break
+		
 	return results
 	
 def orderByResults(results, num_attributes):
@@ -336,9 +349,22 @@ if __name__ == '__main__':
 			sort_order = [i for i in range(num_attributes)]
 			for num_subset in range(5, num_attributes, 5):
 				num_trials = max(100, num_attributes*2)
+				csv_matrix_name  = csv.makeCsvPath('subset.matrix' +('%03d'%num_subset))
+				csv_results_name = csv.makeCsvPath('subset.results'+('%03d'%num_subset))
+				csv_best_name    = csv.makeCsvPath('subset.best'   +('%03d'%num_subset))
+				csv_summary_name  = csv.makeCsvPath('subset.summary'+('%03d'%num_subset))
+			
 				ordered_matrix = pca.reorderMatrix(matrix, sort_order)
-				results = findBestOfSize(ordered_matrix, num_subset, num_trials)
+				csv.writeCsv(csv_matrix_name, ordered_matrix)
+				
+				results = findBestOfSize(ordered_matrix, num_subset, num_trials, csv_summary_name)
+				
 				sort_order = orderByResults(results,num_attributes)
+				#c_x = results[0].columns + [-1]      # include outcome
+				#sub_matrix = [[row[i] for i in c_x] for row in ordered_matrix]
+				#csv.writeCsv(csv_best_name,sub_matrix, )
+				shutil.copyfile(results[0]['csv'],csv_best_name)
+				shutil.copyfile(results[0]['results'],csv_results_name)
 		
 	if False:
 		out = open(out_fn, 'w')
