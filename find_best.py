@@ -51,7 +51,7 @@ if True:
 	weka_root = os.environ['WEKA_ROOT']	
 	weka_jar = os.path.join(weka_root, 'weka.jar')
 	weka_mlp = 'weka.classifiers.functions.MultilayerPerceptron'
-	mlp_opts = ' -H "a,2" '
+	mlp_opts = ' -H "a,2" -x 4'
  	
 	
 def runMLP(in_fn, out_fn):
@@ -86,7 +86,7 @@ def testMatrixMLP(matrix, columns):
 	temp_csv = temp_base + '.csv'
 	temp_results = temp_base + '.results'
 	csv.writeCsv(temp_csv, sub_matrix)
-	test = True
+	test = False
 	if test:
 		accuracy,dt = 1.0/float(sum([abs(x-5) for x in columns])), 0.1
 	else:
@@ -101,7 +101,7 @@ def spinRouletteWheel(roulette):
 		Return an index with probability proportional to one specified
 	"""
 	total = float(sum([x[1] for x in roulette]))
-	v = random.randrange(total)
+	v = total*random.random()
 	#print 'v', v, 'total', total
 	base = 0.0
 	for x in roulette:
@@ -127,12 +127,21 @@ def testRouletteWheel():
 	total = sum(ratios)
 	print 'splits', [x/total for x in ratios]
 		
-	
+def mutate(columns, max_idx):
+	"Apply a random mutation to a list of columns"
+	d = columns[:]
+	while True:
+		n = random.randint(0, max_idx)
+		if not n in d:
+			d[random.randint(0,len(d))] = n
+			return d
+			
+		
 def crossOver(c1, c2):
 	"Swap half the elements in c1 and c2"
 	assert(len(c1) == len(c2))
 	n = len(c1)
-	shuffle_list = random.sample(range(n), n/2)
+	#shuffle_list = random.sample(range(n), n/2)
 	d1, d2 = c1[:], c2[:]
 	# Find elements that are not in both lists
 	d1.sort(key = lambda x: x not in d2)
@@ -181,19 +190,18 @@ def findBestOfSize(matrix, num_subset, num_trials):
 		results.sort(key = lambda(r): -r['accuracy'])
 		
 	mating_size = num_tried	
-	count = 0	
-	index = 0
 	results.sort(key = lambda(r): -r['accuracy'])
 	best_result = copy.deepcopy(results[0])
 	while num_tried <= num_trials:
 		roulette = [(i,1.0/(1.01-r['accuracy'])) for i,r in enumerate(results)]
-		index = (index + 1) % mating_size
-		second_index = index if count % 3 == 0 else 0
-		c1,c2 = crossOver(results[0]['columns'], results[second_index]['columns'])
-		num_tried = doOneRun(c1)
-		num_tried = doOneRun(c2)
-		if count % 10 == 0:
-			 mutation = random.sample(range(num_attribs), num_subset)
+		i1 = spinRouletteWheel(roulette)
+		i2 = spinRouletteWheel(roulette)
+		if i1 != i2:
+			c1,c2 = crossOver(results[i1]['columns'], results[i2]['columns'])
+			num_tried = doOneRun(c1)
+			num_tried = doOneRun(c2)
+		else:
+			 mutation = mutate(results[i1]['columns'], num_attributes)
 			 num_tried = doOneRun(mutation)
         results.sort(key = lambda(r): -r['accuracy'])
         #
@@ -220,7 +228,7 @@ if __name__ == '__main__':
 	if True:
 		testRouletteWheel()
 		
-	if False:
+	if True:
 		matrix = csv.readCsvRaw(csv.headered_name_pca_corr)
 		num_attributes = len(matrix[0])-1
 		if True:
