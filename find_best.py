@@ -1,7 +1,10 @@
 """
 http://docs.python.org/library/subprocess.html
 """
-import shlex, subprocess, os, time, random, copy, csv, pca
+import shlex, subprocess, os, time, random, copy, shutil, csv, pca
+
+# Set True for testing
+is_testing = False
 
 random.seed(0)
 
@@ -86,11 +89,11 @@ def testMatrixMLP(matrix, columns):
 	temp_base = csv.makeTempPath('subset'+('%03d'%len(columns))+'_')
 	temp_csv = temp_base + '.csv'
 	temp_results = temp_base + '.results'
-	csv.writeCsv(temp_csv, sub_matrix)
-	test = False
-	if test:
-		accuracy,dt = 1.0/float(sum([abs(x-len(columns)/2) for x in columns])), 0.1
+	if is_testing:
+		num_attributes = len(matrix[0]) - 1
+		accuracy,dt = 1.0/float(sum([abs(x-num_attributes/2) for x in columns])), 0.1
 	else:
+		csv.writeCsv(temp_csv, sub_matrix)
 		accuracy,dt = runMLP(temp_csv, temp_results)
 	return (accuracy, temp_csv, temp_results, dt)
 
@@ -245,11 +248,12 @@ def findBestOfSize(matrix, num_subset, num_trials, csv_results_name):
 	
 	def doOneRun(columns, show):
 		accuracy, temp_csv, temp_results,duration = testMatrixMLP(matrix,columns)
+		columns.sort()
 		r = {'num':num_subset, 'accuracy':accuracy, 'columns':columns,'csv':temp_csv, 'results':temp_results, 'duration':duration, 'index':num_tried}
 		results.append(r)
 		results.sort(key = lambda r: -r['accuracy'])
 		if show:
-			print num_tried, ':', num_subset, accuracy, int(duration), 'seconds', len(results), columns 
+			print num_tried, ':', num_subset, accuracy, len(results), columns, int(duration), 'seconds'
 			for i in range(min(3,len(results))):
 				rr = results[i]
 				print '    ',i, ':', rr['accuracy'],rr['columns'], int(rr['duration'])
@@ -264,8 +268,7 @@ def findBestOfSize(matrix, num_subset, num_trials, csv_results_name):
 			i = num_attribs - num_subset 
 		columns = [i+j for j in range(num_subset)]
 		num_tried = doOneRun(columns, True)
-		results.sort(key = lambda r: -r['accuracy'])
-		
+				
 	# start the Genetic Algorithm
 	ga_base = num_tried
 	history_of_best = []
@@ -277,9 +280,9 @@ def findBestOfSize(matrix, num_subset, num_trials, csv_results_name):
 			for j in range(1000):
 				i1,i2 = spinRouletteWheelTwice(roulette)
 				c1,c2 = crossOver(results[i1]['columns'], results[i2]['columns'])
-				if not c1 in existing_columns and not c2 in existing_columns:
+				if not c1 in existing_columns and not c2 in existing_columns and not c1==c2:
 					break
-			print 'cross over', i1, i2, 'took', j, 'tries'
+			print 'cross over', i1, i2, '-', j+1, 'tries'
 			num_tried = doOneRun(c1, True)
 			num_tried = doOneRun(c2, True)
 		else:
@@ -288,13 +291,14 @@ def findBestOfSize(matrix, num_subset, num_trials, csv_results_name):
 				c1 = mutate(results[i1]['columns'], num_attributes)
 				if not c1 in existing_columns:
 					break
-			print 'mutation', i1,'took', j, 'tries'
+			print 'mutation', i1,'took', '-', j+1, 'tries'
 			num_tried = doOneRun(c1, True)
 		# Test for convergence
 		convergence_number = 10
-		converged = True
+		converged = False
 		history_of_best.append(results[0]['accuracy'])
 		if len(history_of_best) >= convergence_number:
+			converged = True
 			for i in range(1,convergence_number):
 				if not history_of_best[i] == history_of_best[0]:
 					converged = False
@@ -363,8 +367,9 @@ if __name__ == '__main__':
 				#c_x = results[0].columns + [-1]      # include outcome
 				#sub_matrix = [[row[i] for i in c_x] for row in ordered_matrix]
 				#csv.writeCsv(csv_best_name,sub_matrix, )
-				shutil.copyfile(results[0]['csv'],csv_best_name)
-				shutil.copyfile(results[0]['results'],csv_results_name)
+				if not is_testing:
+					shutil.copyfile(results[0]['csv'],csv_best_name)
+					shutil.copyfile(results[0]['results'],csv_results_name)
 		
 	if False:
 		out = open(out_fn, 'w')
