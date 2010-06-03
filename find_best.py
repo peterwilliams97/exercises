@@ -371,7 +371,7 @@ if __name__ == '__main__':
 	if False:
 		selectAttibutesGA()
 		
-	if True:
+	if False:
 		num_subset = 25
 		in_filename = csv.makeCsvPath('subset.best' + ('%03d'%num_subset))
 		csv_results_name = csv.makeCsvPath('hidden.layer.results')
@@ -394,7 +394,54 @@ if __name__ == '__main__':
 				best_accuracy = accuracy
 				shutil.copyfile(temp_results, csv_results_name)
 			
-		
+	if False:
+		num_subset = 25
+		in_filename = csv.makeCsvPath('subset.best' + ('%03d'%num_subset))
+		csv_results_name = csv.makeCsvPath('learning.rate.results')
+		csv_summary_name = csv.makeCsvPath('learning.rate.summary')
+		csv_best_name = csv.makeCsvPath('learning.rate.best')
+		csv_summary = file(csv_summary_name, 'w')
+		best_accuracy = 0.0
+		for lr in range(1, 10):
+			learning_rate = float(lr)/10.0
+			opts = '-L ' + str(learning_rate) + ' -H 13 -x 4'
+			out_filename = csv.makeCsvPath('learning.rate' + ('%0.2f'%learning_rate))
+			temp_base = csv.makeTempPath('learning.rate' + ('%0.2f'%learning_rate))
+			temp_results = temp_base + '.results'
+			accuracy, duration = runMLP(in_filename, temp_results, opts)
+			summary = [learning_rate, accuracy, best_accuracy, duration, temp_results]
+			print summary
+			csv_line = ','.join([str(e) for e in summary])
+			csv_summary.write(csv_line + '\n')
+			csv_summary.flush()
+			if accuracy > best_accuracy:
+				best_accuracy = accuracy
+				shutil.copyfile(temp_results, csv_results_name)
+				
+	if True:
+		num_subset = 25
+		in_filename = csv.makeCsvPath('subset.best' + ('%03d'%num_subset))
+		csv_results_name = csv.makeCsvPath('momentum.results')
+		csv_summary_name = csv.makeCsvPath('momentum.summary')
+		csv_best_name = csv.makeCsvPath('momentum.best')
+		csv_summary = file(csv_summary_name, 'w')
+		best_accuracy = 0.0
+		for lr in range(1, 10):
+			momentum = float(lr)/10.0
+			opts = '-M ' + str(momentum) + ' -L 0.3 -H 13 -x 4'
+			out_filename = csv.makeCsvPath('momentum' + ('%0.2f'%momentum))
+			temp_base = csv.makeTempPath('momentum' + ('%0.2f'%momentum))
+			temp_results = temp_base + '.results'
+			accuracy, duration = runMLP(in_filename, temp_results, opts)
+			summary = [momentum, accuracy, best_accuracy, duration, temp_results]
+			print summary
+			csv_line = ','.join([str(e) for e in summary])
+			csv_summary.write(csv_line + '\n')
+			csv_summary.flush()
+			if accuracy > best_accuracy:
+				best_accuracy = accuracy
+				shutil.copyfile(temp_results, csv_results_name)			
+				
 	if False:
 		out = open(out_fn, 'w')
 		err = open(err_fn, 'w')
