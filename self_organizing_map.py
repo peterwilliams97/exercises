@@ -94,7 +94,7 @@ if __name__ == '__main__':
         for i in i_in + [i_test]:
             assert(len(w)==len(i))
        
-    # Set initial weights and doh <num_iterations> iterations of the algorithm
+    # Set initial weights and do <num_iterations> iterations of the algorithm
     w = w_in
     print ',' + aa2Csv(map(lambda x: title(x[0],x[1]), column_names))
     for t in range(num_iterations):

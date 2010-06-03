@@ -29,8 +29,6 @@ def getAccuracy(fn):
 				accuracy = float(terms[4])
 	return accuracy
 
-
-	
 def preprocess():
 	"Add headers and pre-process the data. This needs to be done once"
 	header = makeHeader()
@@ -49,15 +47,15 @@ def preprocess():
 	
 # Locations of Weka files on my computer. This will need to be customized
 # for each computer that runs this program	
+
 if True:
-	
 	weka_root = os.environ['WEKA_ROOT']	
 	weka_jar = os.path.join(weka_root, 'weka.jar')
 	weka_mlp = 'weka.classifiers.functions.MultilayerPerceptron'
 	# mlp_opts = ' -H "a,2" -x 4'
- 	mlp_opts = ' -H "a" -x 4'
+ 	mlp_opts = '-H "a" -x 4'
 	
-def runMLP(in_fn, out_fn):
+def runMLP(in_fn, out_fn, opts = mlp_opts):
 	""" Run the Weka MultilayerPerceptron with options mlp_opts on the data in in_fn
 		Write data to file out_fn
 	"""
@@ -68,18 +66,14 @@ def runMLP(in_fn, out_fn):
 		print 'Input file', in_fn, ' does not exist'
 		exit()
 	out = open(out_fn, 'w')		
-	cmd = 'java -cp ' + weka_jar  + ' ' + weka_mlp + mlp_opts + ' -t ' + in_fn
+	cmd = 'java -cp ' + weka_jar  + ' ' + weka_mlp + ' ' + opts + ' -t ' + in_fn
 	print cmd
-	print '------------------------ 1'
 	t1 = time.time()
-	p = subprocess.Popen(cmd, stdout=out)
-	print '------------------------ 2'		
+	p = subprocess.Popen(cmd, stdout=out)	
 	p.wait()
 	t2 = time.time()
-	print '------------------------ 3'
 	accuracy = getAccuracy(out_fn)
-	dt = t2-t1
-	return (accuracy, dt)
+	return (accuracy, t2-t1)
 
 
 def testMatrixMLP(matrix, columns):
@@ -107,7 +101,6 @@ def makeRankings(roulette):
 	ranks.sort(key = lambda x: -x['weight'])
 	return ranks
 		
-	
 def spinRouletteWheel(roulette_in):
 	"""	Find the roulette wheel winner
 		roulette is a list of 2-tuples
@@ -253,7 +246,7 @@ def findBestOfSize(matrix, num_subset, num_trials, csv_results_name):
 		results.append(r)
 		results.sort(key = lambda r: -r['accuracy'])
 		if show:
-			print num_tried, ':', num_subset, accuracy, len(results), columns, int(duration), 'seconds'
+			print num_subset, num_tried, ':',  accuracy, len(results), columns, int(duration), 'seconds'
 			for i in range(min(3,len(results))):
 				rr = results[i]
 				print '    ',i, ':', rr['accuracy'],rr['columns'], int(rr['duration'])
@@ -312,6 +305,36 @@ def findBestOfSize(matrix, num_subset, num_trials, csv_results_name):
 				break
 		
 	return results
+
+def selectAttibutesGA():
+	matrix = csv.readCsvRaw(csv.headered_name_pca_corr)
+	num_attributes = len(matrix[0])-1
+	if False:
+		num_subset = 5
+		num_trials = max(100, num_attributes*2)
+		results = findBestOfSize(matrix, num_subset, num_trials)
+		order = orderByResults(results,num_attributes)
+	if True:
+		sort_order = [i for i in range(num_attributes)]
+		for num_subset in range(5, num_attributes, 5):
+			num_trials = max(100, num_attributes*2)
+			csv_matrix_name  = csv.makeCsvPath('subset.matrix' +('%03d'%num_subset))
+			csv_results_name = csv.makeCsvPath('subset.results'+('%03d'%num_subset))
+			csv_best_name    = csv.makeCsvPath('subset.best'   +('%03d'%num_subset))
+			csv_summary_name  = csv.makeCsvPath('subset.summary'+('%03d'%num_subset))
+		
+			ordered_matrix = pca.reorderMatrix(matrix, sort_order)
+			csv.writeCsv(csv_matrix_name, ordered_matrix)
+			
+			results = findBestOfSize(ordered_matrix, num_subset, num_trials, csv_summary_name)
+			
+			sort_order = orderByResults(results,num_attributes)
+			#c_x = results[0].columns + [-1]      # include outcome
+			#sub_matrix = [[row[i] for i in c_x] for row in ordered_matrix]
+			#csv.writeCsv(csv_best_name,sub_matrix, )
+			if not is_testing:
+				shutil.copyfile(results[0]['csv'],csv_best_name)
+				shutil.copyfile(results[0]['results'],csv_results_name)
 	
 def orderByResults(results, num_attributes):
 	order = []
@@ -345,35 +368,32 @@ if __name__ == '__main__':
 		testMutate()
 		testCrossOver()
 		
+	if False:
+		selectAttibutesGA()
+		
 	if True:
-		matrix = csv.readCsvRaw(csv.headered_name_pca_corr)
-		num_attributes = len(matrix[0])-1
-		if False:
-			num_subset = 5
-			num_trials = max(100, num_attributes*2)
-			results = findBestOfSize(matrix, num_subset, num_trials)
-			order = orderByResults(results,num_attributes)
-		if True:
-			sort_order = [i for i in range(num_attributes)]
-			for num_subset in range(5, num_attributes, 5):
-				num_trials = max(100, num_attributes*2)
-				csv_matrix_name  = csv.makeCsvPath('subset.matrix' +('%03d'%num_subset))
-				csv_results_name = csv.makeCsvPath('subset.results'+('%03d'%num_subset))
-				csv_best_name    = csv.makeCsvPath('subset.best'   +('%03d'%num_subset))
-				csv_summary_name  = csv.makeCsvPath('subset.summary'+('%03d'%num_subset))
+		num_subset = 25
+		in_filename = csv.makeCsvPath('subset.best' + ('%03d'%num_subset))
+		csv_results_name = csv.makeCsvPath('hidden.layer.results')
+		csv_summary_name = csv.makeCsvPath('hidden.layer.summary')
+		csv_best_name = csv.makeCsvPath('hidden.layer.best')
+		csv_summary = file(csv_summary_name, 'w')
+		best_accuracy = 0.0
+		for num_hidden in range(1, num_subset):
+			opts = '-H ' + str(num_hidden) + ' -x 4'
+			out_filename = csv.makeCsvPath('num.hidden' + ('%03d'%num_hidden))
+			temp_base = csv.makeTempPath('num.hidden' + ('%03d'%num_hidden))
+			temp_results = temp_base + '.results'
+			accuracy, duration = runMLP(in_filename, temp_results, opts)
+			summary = [num_hidden, accuracy, best_accuracy, duration, temp_results]
+			print summary
+			csv_line = ','.join([str(e) for e in summary])
+			csv_summary.write(csv_line + '\n')
+			csv_summary.flush()
+			if accuracy > best_accuracy:
+				best_accuracy = accuracy
+				shutil.copyfile(temp_results, csv_results_name)
 			
-				ordered_matrix = pca.reorderMatrix(matrix, sort_order)
-				csv.writeCsv(csv_matrix_name, ordered_matrix)
-				
-				results = findBestOfSize(ordered_matrix, num_subset, num_trials, csv_summary_name)
-				
-				sort_order = orderByResults(results,num_attributes)
-				#c_x = results[0].columns + [-1]      # include outcome
-				#sub_matrix = [[row[i] for i in c_x] for row in ordered_matrix]
-				#csv.writeCsv(csv_best_name,sub_matrix, )
-				if not is_testing:
-					shutil.copyfile(results[0]['csv'],csv_best_name)
-					shutil.copyfile(results[0]['results'],csv_results_name)
 		
 	if False:
 		out = open(out_fn, 'w')

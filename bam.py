@@ -193,9 +193,41 @@ if __name__ == '__main__':
     if False:
         print 'Question 1 ++++++++++++++++++++++++++'
         question1()
-    if True:
+    if False:
         print 'Question 2 ++++++++++++++++++++++++++'
         question2()
+        
+    if True:
+        x0 = [1, -1, 1, -1]
+        x1 = [-1, -1, -1, 1]
+        print x0
+        print x1       
+        print '-----------'
+        xx0 = cross(x0, x0)
+        xx1 = cross(x1, x1)
+        w = len(x0)
+        s = [[xx0[i][j] + xx1[i][j] for j in range(w)] for i in range(w)]
+        print '-----------'      
+        print s
+        print '================'
+        y = [-1,-1,1,-1]
+        print y
+        dots = [prod(x,y) for x in s]
+        print dots
+                
+        print '-----------'        
+       # print xx0
+       # print xx1
+        print '-----------'
+        xy0 = cross(x0, x1)
+        xy1 = cross(x1, x0)
+       
+       
+        
+       
+     
+      
+        
     
     
         

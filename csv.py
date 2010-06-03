@@ -5,7 +5,7 @@ Clean advertisement detection trainging set file
 Peter
 16/05/2010
 '''
-import copy,os
+import copy,os,time
 from math import *
 from operator import itemgetter
 
