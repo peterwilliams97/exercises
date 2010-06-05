@@ -76,7 +76,7 @@ def runMLP(in_fn, out_fn, opts = mlp_opts):
 	return (accuracy, t2-t1)
 
 
-def testMatrixMLP(matrix, columns):
+def testMatrixMLP(matrix, columns, opts = mlp_opts):
 	"Run MLP on attributes with index in columns"
 	c_x = columns + [-1]      # include outcome
 	sub_matrix = [[row[i] for i in c_x] for row in matrix]
@@ -88,7 +88,7 @@ def testMatrixMLP(matrix, columns):
 		accuracy,dt = 1.0/float(sum([abs(x-num_attributes/2) for x in columns])), 0.1
 	else:
 		csv.writeCsv(temp_csv, sub_matrix)
-		accuracy,dt = runMLP(temp_csv, temp_results)
+		accuracy,dt = runMLP(temp_csv, temp_results, opts)
 	return (accuracy, temp_csv, temp_results, dt)
 
 def makeRankings(roulette):
@@ -349,6 +349,106 @@ def orderByResults(results, num_attributes):
 	print 'orderByResults', num_attributes, order
 	return order
 
+def testBySize(incrementing_hidden):
+	"Test MLP results on matrix by number of left side columns"
+	
+	start_num_columns = 30 
+	delta_num_columns = 10
+	opts = '-M 0.5 -L 0.3 -x 4 -H '
+	num_hidden = 13
+		
+	csv_matrix_name = csv.makeCsvPath('subset.matrix035')	
+	base_name = 'number.attributes'
+	if incrementing_hidden:
+		base_name = base_name + '.inc'
+	csv_results_name = csv.makeCsvPath(base_name + '.results')
+	csv_summary_name = csv.makeCsvPath(base_name + '.summary')
+	csv_best_name    = csv.makeCsvPath(base_name + '.best')
+	
+	matrix  = csv.readCsvRaw(csv_matrix_name)
+	num_attribs = len(matrix[0])-1  # last column is category
+	print 'testBySize', len(matrix), start_num_columns, delta_num_columns, len(matrix[0])
+	
+	best_accuracy = 0.0
+	results = []
+	csv_results = file(csv_results_name, 'w')
+	
+	for num_columns in range(start_num_columns, len(matrix[0]), delta_num_columns):
+		columns = [i for i in range(num_columns)]
+		if incrementing_hidden:
+			num_hidden = int(float(num_columns)*13.0/30.0)
+		accuracy, temp_csv, temp_results, duration = testMatrixMLP(matrix, columns, opts + str(num_hidden))
+		r = {'num':num_columns, 'accuracy':accuracy, 'csv':temp_csv, 'results':temp_results, 'duration':duration}
+		results.append(r)
+		results.sort(key = lambda r: -r['accuracy'])
+		if True:
+			print num_columns, ':',  accuracy, len(results), int(duration), 'seconds'
+			for i in range(min(3,len(results))):
+				rr = results[i]
+				print '    ',i, ':', rr['accuracy'], rr['num'], int(rr['duration'])
+		summary = [num_columns, accuracy, duration, temp_csv, temp_results]
+		csv_line = ','.join([str(e) for e in summary])
+		csv_results.write(csv_line + '\n')
+		csv_results.flush()
+		if accuracy > best_accuracy:
+			best_accuracy = accuracy
+			shutil.copyfile(temp_csv, csv_best_name)
+			shutil.copyfile(temp_results, csv_results_name)
+		
+	return results
+
+def testByNumberHidden(num_columns, num_cv = 4):
+	"""Test MLP results on matrix by number of neurons in hidden layer
+		num_columns is number of leftmost columns of matrix to test
+		num_cv is the number of cross-validation rounds
+	"""
+	
+	start_num_hidden = 15 
+	delta_num_hidden = 10
+	#opts = '-M 0.5 -L 0.3 -x 4 -H '
+	#num_hidden = 13
+	
+	def makeWekaOptions(learning_rate, momentum, number_hidden, num_cv):
+		options = {'M':momentum, 'L':learning_rate, 'H':number_hidden, 'x':num_cv}
+		option_strings = ['-' + k + ' ' + str(options[k]) for k in options.keys()]
+		return ' '.join(option_strings)
+		
+	csv_matrix_name = csv.makeCsvPath('subset.matrix035')	
+	base_name = 'number.hidden.col' + str(num_columns) + '.x' + str(num_cv) 
+	csv_results_name = csv.makeCsvPath(base_name + '.results')
+	csv_summary_name = csv.makeCsvPath(base_name + '.summary')
+	csv_best_name    = csv.makeCsvPath(base_name + '.best')
+	
+	matrix  = csv.readCsvRaw(csv_matrix_name)
+	num_attribs = len(matrix[0])-1  # last column is category
+	print 'testByNumberHidden', len(matrix), start_num_hidden, delta_num_hidden, num_columns
+	
+	best_accuracy = 0.0
+	results = []
+	csv_results = file(csv_results_name, 'w')
+	
+	for num_hidden in range(start_num_hidden, num_columns, delta_num_hidden):
+		columns = [i for i in range(num_columns)]
+		accuracy, temp_csv, temp_results, duration = testMatrixMLP(matrix, columns, makeWekaOptions(0.3, 0.5, num_hidden, num_cv))
+		r = {'num':num_hidden, 'accuracy':accuracy, 'csv':temp_csv, 'results':temp_results, 'duration':duration}
+		results.append(r)
+		results.sort(key = lambda r: -r['accuracy'])
+		if True:
+			print num_hidden, ':',  accuracy, len(results), int(duration), 'seconds'
+			for i in range(min(5,len(results))):
+				rr = results[i]
+				print '    ',i, ':', rr['accuracy'], rr['num'], int(rr['duration'])
+		summary = [num_hidden, accuracy, duration, temp_csv, temp_results]
+		csv_line = ','.join([str(e) for e in summary])
+		csv_results.write(csv_line + '\n')
+		csv_results.flush()
+		if accuracy > best_accuracy:
+			best_accuracy = accuracy
+			shutil.copyfile(temp_csv, csv_best_name)
+			shutil.copyfile(temp_results, csv_results_name)
+		
+	return results
+
 if __name__ == '__main__':
 	
 	if False:
@@ -418,7 +518,7 @@ if __name__ == '__main__':
 				best_accuracy = accuracy
 				shutil.copyfile(temp_results, csv_results_name)
 				
-	if True:
+	if False:
 		num_subset = 25
 		in_filename = csv.makeCsvPath('subset.best' + ('%03d'%num_subset))
 		csv_results_name = csv.makeCsvPath('momentum.results')
@@ -441,6 +541,13 @@ if __name__ == '__main__':
 			if accuracy > best_accuracy:
 				best_accuracy = accuracy
 				shutil.copyfile(temp_results, csv_results_name)			
+				
+	if False:
+		testBySize(True)			
+		
+	if True:
+		# testBySize found best size was around 120
+		testByNumberHidden(120, 10)
 				
 	if False:
 		out = open(out_fn, 'w')
