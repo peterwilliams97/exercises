@@ -492,7 +492,7 @@ def testByNumberHidden(csv_matrix_name, output_basename, num_columns, num_cv = 4
 			shutil.copyfile(temp_results, results_name)
 			shutil.copyfile(outnameToModelname(temp_results), model_name)
 			
-	return {'summary':csv_summary_name, 'best':csv_best_name, 'results':csv_results_name, 'model':model_name}
+	return {'summary':csv_summary_name, 'best':csv_best_name, 'results':results_name, 'model':model_name}
 
 def testCostMatrix(num_columns, num_cv = 4):
 	"""Test MLP results with a range of false positive costs
