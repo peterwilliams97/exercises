@@ -163,8 +163,11 @@ headered_name_pca_norm = os.path.join(data_dir,'ad1_header.pp.pca.norm.csv')
 # PCA data normalized to stdev == 1 by correlation with outcome
 headered_name_pca_corr = os.path.join(data_dir,'ad1_header.pp.pca.norm.corr_order.csv')  
 
+def makePath(name):
+    return os.path.join(data_dir, name)  
+
 def makeCsvPath(name):
-    return os.path.join(data_dir, name + '.csv')    
+    return makePath(name + '.csv')    
 
 def makeTempPath(base_name):
     count_fn = os.path.join(data_dir, 'temp', 'count.txt') 

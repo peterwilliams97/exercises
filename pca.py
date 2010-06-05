@@ -159,9 +159,12 @@ def doTests():
     mdpTestRandom(2, 1559, 3279, False) # 170 sec
   
     
-def pcaAdData(theshold_variance):   
-    "Run PCA on the boolean columns of the ad data set"
-    h2data = csv.readCsvRaw(csv.headered_name_pp)
+def pcaAdData(theshold_variance, in_filename, out_filename):   
+    """ Run PCA on the boolean columns of the ad data set
+        Read data from in_filename
+        Write data to out_filename
+    """
+    h2data = csv.readCsvRaw(in_filename)
     csv.validateMatrix(h2data)
     
     # Boolean data are columns 3 to second last
@@ -171,7 +174,7 @@ def pcaAdData(theshold_variance):
     
     # Find the output dimension (#basis vectors) required to explain
     # threshold_variance
-    for odim in range(200, 1000, 50):
+    for odim in range(200, len(x[0]), 50):
         start_time = time.clock()
         pcanode = mdp.nodes.PCANode(svd=True, output_dim = odim, dtype='float64')
         pcanode.train(x)
@@ -193,7 +196,7 @@ def pcaAdData(theshold_variance):
     header = h2data[0][:3] + pca_header
     num_data = [h2data[i+1][:3] + pca[i] for i in range(len(h2data)-1)] 
     data = [header] + num_data   
-    csv.writeCsv(csv.headered_name_pca, data)
+    csv.writeCsv(out_filename, data)
      
     
 def normalizeData(in_fn, out_fn):
@@ -281,16 +284,25 @@ if __name__=='__main__':
     if False:
         covTest()
     #doTests()
-    if False:
-        pcaAdData(0.90)
-        
-    if False:
-        normalizeData(csv.headered_name_pca, csv.headered_name_pca_norm)    
+    
+    explained_variance = 0.99
+    # pca_filename = csv.headered_name_pca
+    pca_filename = csv.makeCsvPath('pca' + str(int(explained_variance)))
+    #pca_norm_filename = csv.headered_name_pca_norm
+    pca_norm_filename = csv.makeCsvPath('pca.norm' + str(int(explained_variance)))
+    #pca_norm_corr_filename = csv.headered_name_pca_corr
+    pca_norm_corr_filename = csv.makeCsvPath('pca.norm.corr' + str(int(explained_variance)))
     
     if True:
-        sort_order = rankByCorrelationWithOutcomes(csv.headered_name_pca_norm)
+        pcaAdData(explained_variance, csv.headered_name_pp, pca_filename)
+        
+    if True:
+        normalizeData(pca_filename, pca_norm_filename)    
+    
+    if True:
+        sort_order = rankByCorrelationWithOutcomes(pca_norm_filename)
         def reorder(in_cells):
             return reorderMatrix(in_cells, sort_order)
-        csv.modifyCsvRaw(csv.headered_name_pca_norm, csv.headered_name_pca_corr, reorder)
+        csv.modifyCsvRaw(pca_norm_filename, pca_norm_corr_filename, reorder)
         
     

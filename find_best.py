@@ -54,27 +54,50 @@ if True:
 	weka_mlp = 'weka.classifiers.functions.MultilayerPerceptron'
 	# mlp_opts = ' -H "a,2" -x 4'
  	mlp_opts = '-H "a" -x 4'
+ 	# http://old.nabble.com/WEKA-CLI:-Problems-with-flags-td23670055.html
+ 	weka_cost = 'weka.classifiers.meta.CostSensitiveClassifier -cost-matrix "[0.0 1.0; 10.0 0.0]" -S 1 -W '
 	
-def runMLP(in_fn, out_fn, opts = mlp_opts):
-	""" Run the Weka MultilayerPerceptron with options mlp_opts on the data in in_fn
+def outnameToModelname(out_fn):	
+	return out_fn + '.model'
+	
+def checkExists(title, filename):	
+	if not os.path.exists(weka_jar):
+		print title, filename, 'does not exist'
+		exit()
+		
+def runWekaClass(out_fn, weka_cmds):
+	""" Run the Weka class weka_cmds
 		Write data to file out_fn
 	"""
-	if not os.path.exists(weka_jar):
-		print 'Weka jar', weka_jar, ' does not exist'
-		exit()
-	if not os.path.exists(in_fn):
-		print 'Input file', in_fn, ' does not exist'
-		exit()
+	checkExists('Weka jar',  weka_jar) 
 	out = open(out_fn, 'w')		
-	cmd = 'java -cp ' + weka_jar  + ' ' + weka_mlp + ' ' + opts + ' -t ' + in_fn
+	cmd = 'java -cp ' + weka_jar  + ' ' + weka_cmds
 	print cmd
 	t1 = time.time()
 	p = subprocess.Popen(cmd, stdout=out)	
 	p.wait()
 	t2 = time.time()
-	accuracy = getAccuracy(out_fn)
-	return (accuracy, t2-t1)
+	return t2-t1		
+	
+def runMLPTrain(data_filename, results_filename, opts = mlp_opts):
+	""" Run the Weka MultilayerPerceptron with options mlp_opts on the data in data_filename
+		Write data to file out_fn
+	"""
+	checkExists('Data file', data_filename) 
+	duration = runWekaClass(results_filename, weka_mlp + ' ' + opts + ' -t ' + data_filename + ' -d ' + outnameToModelname(results_filename)) 
+	accuracy = getAccuracy(results_filename)
+	return (accuracy, duration)
 
+def runMLPPredict(data_filename, model_filename, predictions_filename):
+	""" Run the Weka MultilayerPerceptron with model model_filename on
+		data_filename.
+		Write data to predictions_filename
+	"""
+	checkExists('Data file', data_filename) 
+	checkExists('Model file', model_filename) 
+	duration = runWekaClass(predictions_filename, weka_mlp + ' -p 0 -T ' + data_filename + ' -l ' + model_filename) 
+	accuracy = getAccuracy(results_filename)
+	return (accuracy, duration)
 
 def testMatrixMLP(matrix, columns, opts = mlp_opts):
 	"Run MLP on attributes with index in columns"
@@ -88,8 +111,34 @@ def testMatrixMLP(matrix, columns, opts = mlp_opts):
 		accuracy,dt = 1.0/float(sum([abs(x-num_attributes/2) for x in columns])), 0.1
 	else:
 		csv.writeCsv(temp_csv, sub_matrix)
-		accuracy,dt = runMLP(temp_csv, temp_results, opts)
+		accuracy,dt = runMLPTrain(temp_csv, temp_results, opts)
 	return (accuracy, temp_csv, temp_results, dt)
+
+def mapToWekaOptions(options_map):
+	"""	Convert a map with keys and values corresponding to Weka options 
+		to a Weka options string
+		e.g. {'M':0.5 'L':0.3, 'H':7 'x':5} => '-m 0.5 -L -0.3 -H 7 -x 5'
+		"""
+	option_strings = ['-' + k + ' ' + str(options_map[k]) for k in options_map.keys()]
+	return ' '.join(option_strings)
+
+def spaceSeparatedLine(arr):
+	return ' '.join(map(str,arr))
+
+def makeWekaOptions(learning_rate, momentum, number_hidden, num_cv, costs = None):
+	"Return Weka option string for specified values"
+	options_map = {'M':momentum, 'L':learning_rate, 'H':number_hidden, 'x':num_cv}
+	if costs:
+		cost_matrix_path = csv.makeTempPath('cost') + '.cost'
+		options_map['m'] = cost_matrix_path
+		cost_matrix = ['%% Rows	Columns',
+					   spaceSeparatedLine([2,2]),
+					   '%% Matrix elements',
+					   spaceSeparatedLine([0.0,  costs['True']]),
+					   spaceSeparatedLine([costs['False'], 0.0])]	
+		file(cost_matrix_path, 'w').write('\n'.join(cost_matrix))
+	return mapToWekaOptions(options_map)
+	
 
 def makeRankings(roulette):
 	"Rankings for use in roulette"
@@ -319,7 +368,7 @@ def selectAttibutesGA():
 		for num_subset in range(5, num_attributes, 5):
 			num_trials = max(100, num_attributes*2)
 			csv_matrix_name  = csv.makeCsvPath('subset.matrix' +('%03d'%num_subset))
-			csv_results_name = csv.makeCsvPath('subset.results'+('%03d'%num_subset))
+			csv_results_name = csv.makePath('subset.results'+('%03d'%num_subset))
 			csv_best_name    = csv.makeCsvPath('subset.best'   +('%03d'%num_subset))
 			csv_summary_name  = csv.makeCsvPath('subset.summary'+('%03d'%num_subset))
 		
@@ -361,7 +410,7 @@ def testBySize(incrementing_hidden):
 	base_name = 'number.attributes'
 	if incrementing_hidden:
 		base_name = base_name + '.inc'
-	csv_results_name = csv.makeCsvPath(base_name + '.results')
+	csv_results_name = csv.makePath(base_name + '.results')
 	csv_summary_name = csv.makeCsvPath(base_name + '.summary')
 	csv_best_name    = csv.makeCsvPath(base_name + '.best')
 	
@@ -370,8 +419,8 @@ def testBySize(incrementing_hidden):
 	print 'testBySize', len(matrix), start_num_columns, delta_num_columns, len(matrix[0])
 	
 	best_accuracy = 0.0
-	results = []
-	csv_results = file(csv_results_name, 'w')
+	summary = []
+	csv_summary = file(csv_summary_name, 'w')
 	
 	for num_columns in range(start_num_columns, len(matrix[0]), delta_num_columns):
 		columns = [i for i in range(num_columns)]
@@ -379,17 +428,17 @@ def testBySize(incrementing_hidden):
 			num_hidden = int(float(num_columns)*13.0/30.0)
 		accuracy, temp_csv, temp_results, duration = testMatrixMLP(matrix, columns, opts + str(num_hidden))
 		r = {'num':num_columns, 'accuracy':accuracy, 'csv':temp_csv, 'results':temp_results, 'duration':duration}
-		results.append(r)
-		results.sort(key = lambda r: -r['accuracy'])
+		summary.append(r)
+		summary.sort(key = lambda r: -r['accuracy'])
 		if True:
 			print num_columns, ':',  accuracy, len(results), int(duration), 'seconds'
 			for i in range(min(3,len(results))):
 				rr = results[i]
 				print '    ',i, ':', rr['accuracy'], rr['num'], int(rr['duration'])
-		summary = [num_columns, accuracy, duration, temp_csv, temp_results]
-		csv_line = ','.join([str(e) for e in summary])
-		csv_results.write(csv_line + '\n')
-		csv_results.flush()
+		summary_row = [num_columns, accuracy, duration, temp_csv, temp_results]
+		csv_line = ','.join([str(e) for e in summary_row])
+		csv_summary.write(csv_line + '\n')
+		csv_summary.flush()
 		if accuracy > best_accuracy:
 			best_accuracy = accuracy
 			shutil.copyfile(temp_csv, csv_best_name)
@@ -397,27 +446,22 @@ def testBySize(incrementing_hidden):
 		
 	return results
 
-def testByNumberHidden(num_columns, num_cv = 4):
+def testByNumberHidden(csv_matrix_name, output_basename, num_columns, num_cv = 4):
 	"""Test MLP results on matrix by number of neurons in hidden layer
 		num_columns is number of leftmost columns of matrix to test
 		num_cv is the number of cross-validation rounds
 	"""
 	
-	start_num_hidden = 15 
+	start_num_hidden = min(15, num_columns-1) 
 	delta_num_hidden = 10
 	#opts = '-M 0.5 -L 0.3 -x 4 -H '
 	#num_hidden = 13
 	
-	def makeWekaOptions(learning_rate, momentum, number_hidden, num_cv):
-		options = {'M':momentum, 'L':learning_rate, 'H':number_hidden, 'x':num_cv}
-		option_strings = ['-' + k + ' ' + str(options[k]) for k in options.keys()]
-		return ' '.join(option_strings)
-		
-	csv_matrix_name = csv.makeCsvPath('subset.matrix035')	
-	base_name = 'number.hidden.col' + str(num_columns) + '.x' + str(num_cv) 
-	csv_results_name = csv.makeCsvPath(base_name + '.results')
-	csv_summary_name = csv.makeCsvPath(base_name + '.summary')
-	csv_best_name    = csv.makeCsvPath(base_name + '.best')
+	
+	results_name = csv.makePath(output_basename + '.results')
+	model_name = csv.makePath(output_basename + '.model')
+	csv_summary_name = csv.makeCsvPath(output_basename + '.summary')
+	csv_best_name    = csv.makeCsvPath(output_basename + '.best')
 	
 	matrix  = csv.readCsvRaw(csv_matrix_name)
 	num_attribs = len(matrix[0])-1  # last column is category
@@ -425,7 +469,7 @@ def testByNumberHidden(num_columns, num_cv = 4):
 	
 	best_accuracy = 0.0
 	results = []
-	csv_results = file(csv_results_name, 'w')
+	csv_summary = file(csv_summary_name, 'w')
 	
 	for num_hidden in range(start_num_hidden, num_columns, delta_num_hidden):
 		columns = [i for i in range(num_columns)]
@@ -438,6 +482,50 @@ def testByNumberHidden(num_columns, num_cv = 4):
 			for i in range(min(5,len(results))):
 				rr = results[i]
 				print '    ',i, ':', rr['accuracy'], rr['num'], int(rr['duration'])
+		summary = [num_hidden, accuracy, duration, temp_csv, temp_results]
+		csv_line = ','.join([str(e) for e in summary])
+		csv_summary.write(csv_line + '\n')
+		csv_summary.flush()
+		if accuracy > best_accuracy:
+			best_accuracy = accuracy
+			shutil.copyfile(temp_csv, csv_best_name)
+			shutil.copyfile(temp_results, results_name)
+			shutil.copyfile(outnameToModelname(temp_results), model_name)
+			
+	return {'summary':csv_summary_name, 'best':csv_best_name, 'results':csv_results_name, 'model':model_name}
+
+def testCostMatrix(num_columns, num_cv = 4):
+	"""Test MLP results with a range of false positive costs
+	"""
+	
+	num_hidden = 5 
+	
+	csv_matrix_name = csv.makeCsvPath('subset.matrix035')	
+	base_name = 'cost.col' + str(num_columns) + '.x' + str(num_cv) 
+	csv_results_name = csv.makePath(base_name + '.results')
+	csv_summary_name = csv.makeCsvPath(base_name + '.summary')
+	csv_best_name    = csv.makeCsvPath(base_name + '.best')
+	
+	matrix  = csv.readCsvRaw(csv_matrix_name)
+	num_attribs = len(matrix[0])-1  # last column is category
+	print 'testCostMatrix', len(matrix), num_hidden, num_columns
+	
+	best_accuracy = 0.0
+	results = []
+	csv_results = file(csv_summary_name, 'w')
+	
+	for false_positive_cost in range(1, 11, 2):
+		columns = [i for i in range(num_columns)]
+		costs_map = {'True':1.0, 'False':float(false_positive_cost)}
+		accuracy, temp_csv, temp_results, duration = testMatrixMLP(matrix, columns, makeWekaOptions(0.3, 0.5, num_hidden, num_cv, costs_map))
+		r = {'cost':false_positive_cost, 'accuracy':accuracy, 'csv':temp_csv, 'results':temp_results, 'duration':duration}
+		results.append(r)
+		results.sort(key = lambda r: -r['accuracy'])
+		if True:
+			print false_positive_cost, ':',  accuracy, len(results), int(duration), 'seconds'
+			for i in range(min(5,len(results))):
+				rr = results[i]
+				print '    ',i, ':', rr['accuracy'], rr['cost'], int(rr['duration'])
 		summary = [num_hidden, accuracy, duration, temp_csv, temp_results]
 		csv_line = ','.join([str(e) for e in summary])
 		csv_results.write(csv_line + '\n')
@@ -460,7 +548,7 @@ if __name__ == '__main__':
 	if False:
 		out_fn = 'tmp.out.txt'
 		in_fn = csv.headered_name_pca
-		runMLP(in_fn, out_fn)
+		runMLPTrain(in_fn, out_fn)
 		
 	if False:
 		testRouletteWheel()
@@ -474,7 +562,7 @@ if __name__ == '__main__':
 	if False:
 		num_subset = 25
 		in_filename = csv.makeCsvPath('subset.best' + ('%03d'%num_subset))
-		csv_results_name = csv.makeCsvPath('hidden.layer.results')
+		csv_results_name = csv.makePath('hidden.layer.results')
 		csv_summary_name = csv.makeCsvPath('hidden.layer.summary')
 		csv_best_name = csv.makeCsvPath('hidden.layer.best')
 		csv_summary = file(csv_summary_name, 'w')
@@ -484,7 +572,7 @@ if __name__ == '__main__':
 			out_filename = csv.makeCsvPath('num.hidden' + ('%03d'%num_hidden))
 			temp_base = csv.makeTempPath('num.hidden' + ('%03d'%num_hidden))
 			temp_results = temp_base + '.results'
-			accuracy, duration = runMLP(in_filename, temp_results, opts)
+			accuracy, duration = runMLPTrain(in_filename, temp_results, opts)
 			summary = [num_hidden, accuracy, best_accuracy, duration, temp_results]
 			print summary
 			csv_line = ','.join([str(e) for e in summary])
@@ -497,7 +585,7 @@ if __name__ == '__main__':
 	if False:
 		num_subset = 25
 		in_filename = csv.makeCsvPath('subset.best' + ('%03d'%num_subset))
-		csv_results_name = csv.makeCsvPath('learning.rate.results')
+		csv_results_name = csv.makePath('learning.rate.results')
 		csv_summary_name = csv.makeCsvPath('learning.rate.summary')
 		csv_best_name = csv.makeCsvPath('learning.rate.best')
 		csv_summary = file(csv_summary_name, 'w')
@@ -521,7 +609,7 @@ if __name__ == '__main__':
 	if False:
 		num_subset = 25
 		in_filename = csv.makeCsvPath('subset.best' + ('%03d'%num_subset))
-		csv_results_name = csv.makeCsvPath('momentum.results')
+		csv_results_name = csv.makePath('momentum.results')
 		csv_summary_name = csv.makeCsvPath('momentum.summary')
 		csv_best_name = csv.makeCsvPath('momentum.best')
 		csv_summary = file(csv_summary_name, 'w')
@@ -546,9 +634,23 @@ if __name__ == '__main__':
 		testBySize(True)			
 		
 	if True:
+		csv_matrix_name = csv.makeCsvPath('subset.matrix035')	
+		num_columns = 10 
+		num_cv = 4
+		output_basename = 'number.hidden.col' + str(num_columns) + '.x' + str(num_cv) 
+		files = testByNumberHidden(csv_matrix_name, output_basename, num_columns, num_cv = 4)
 		# testBySize found best size was around 120
-		testByNumberHidden(120, 10)
+		#testByNumberHidden(120, 10)
+		predictions_filename = csv.makePath(output_basename + '.predict')
+		runMLPPredict(files['best'], file['model'], predictions_filename)
+		#row_index = getRowsFromPredictionsFile(predictions_filename)
+		#do pca on this file,train and repeat
 				
+	if False:
+		num_columns = 35
+		num_cv = 4
+		testCostMatrix(num_columns, num_cv)
+		
 	if False:
 		out = open(out_fn, 'w')
 		err = open(err_fn, 'w')
