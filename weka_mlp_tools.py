@@ -1,5 +1,8 @@
 """
-http://docs.python.org/library/subprocess.html
+A set of tools for running  the Weka MLP function and analyzing its output
+This class is 
+weka.classifiers.functions.MultilayerPerceptron
+
 """
 import shlex, subprocess, os, time, random, copy, shutil, csv, pca
 
@@ -18,6 +21,27 @@ def checkExists(title, filename):
 		print title, filename, 'does not exist'
 		exit()
 				
+def preprocess(raw_name, headered_name, headered_name_pp):
+	"""	Add headers and pre-process the raw Kushmerick  data. 
+		This needs to be done once.
+		- raw_name is the Kushmerick data that is input
+		- headered_name is the name of CSV file with headers that is created
+		- headered_name_pp is the named a file created by preprocessing header name that is created
+	"""
+	print 'preprocess', raw_name, '=>', headered_name, '=>', headered_name_pp
+	header = csv.makeHeader()
+	data = csv.readCsvRaw(raw_name)
+    
+	hdata = [header] + data
+	assert(len(hdata)==len(data)+1)
+	csv.validateMatrix(hdata)
+
+	#swapMatrixColumn(data, 3, -1)
+	csv.writeCsv(headered_name, hdata)
+	h2data = csv.readCsvRaw(headered_name)
+    
+	csv.replaceMissingValues(hdata)
+	csv.writeCsv(headered_name_pp, hdata)
 		
 def getAccuracy(filename):	
 	"Extract the accuracy from stdout save in file called filename"
@@ -64,21 +88,7 @@ def getPredictions(filename):
 			found_header = True
 	return results
 
-def preprocess():
-	"Add headers and pre-process the data. This needs to be done once"
-	header = makeHeader()
-	data = readCsvRaw(raw_name)
-    
-	hdata = [header] + data
-	assert(len(hdata)==len(data)+1)
-	validateMatrix(hdata)
 
-	#swapMatrixColumn(data, 3, -1)
-	writeCsv(headered_name, hdata)
-	h2data = readCsvRaw(headered_name)
-    
-	replaceMissingValues(hdata)
-	writeCsv(headered_name_pp, hdata)
 	
 # Locations of Weka files on my computer. This will need to be customized
 # for each computer that runs this program	
@@ -99,6 +109,7 @@ def outnameToModelname(out_fn):
 def runWekaClass(out_fn, weka_cmds):
 	""" Run the Weka class weka_cmds
 		Write data to file out_fn
+		See http://docs.python.org/library/subprocess.html
 	"""
 	checkExists('Weka jar',  weka_jar) 
 	out = open(out_fn, 'w')		
@@ -565,13 +576,30 @@ def testCostMatrix(num_columns, num_cv = 4):
 		
 	return results
 
+#
+#
+# Data files used in this test
+
+# Input data - Don't touch this    
+raw_name = csv.makeCsvPath('ad1')
+# Input data with header. Needs to be generated once
+headered_name = csv.makePath('header')
+#Input data with header and pre-processing
+headered_name_pp = csv.makePath('header.pp')   
+# PCA on headered_name_pp
+headered_name_pca = csv.makePath('header.pp.pca')  
+# PCA data normalized to stdev == 1
+headered_name_pca_norm = csv.makePath('header.pp.pca.norm')            
+# PCA data normalized to stdev == 1 by correlation with outcome
+headered_name_pca_corr = csv.makePath('header.pp.pca.norm.corr_order')
+
 if __name__ == '__main__':
 	
 	if False:
 		dumpEnv()
 		
-	if False:  # Do this once. Then use headered_name_pp
-		preprocess()
+	if True:  # Do this once. Then use headered_name_pp
+		preprocess(raw_name, headered_name, headered_name_pp)
 	
 	if False:
 		out_fn = 'tmp.out.txt'
@@ -661,7 +689,7 @@ if __name__ == '__main__':
 	if False:
 		testBySize(True)			
 		
-	if True:
+	if False:
 		if False:
 			csv_matrix_name = csv.makeCsvPath('subset.matrix035')	
 			num_columns = 10 

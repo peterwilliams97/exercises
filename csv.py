@@ -59,7 +59,7 @@ def swapMatrixColumn(matrix, i, j):
         for k in range(i+1, j+1):
             v[k-1] = v[k]
         v[j] = x
-'''
+"""
  height: continuous. | possibly missing
    width: continuous.  | possibly missing
    aratio: continuous. | possibly missing
@@ -81,7 +81,7 @@ def swapMatrixColumn(matrix, i, j):
    caption*and: 0,1.
      ...
 
-'''        
+"""       
 
 def makeHeader():
     "Make a header row based on the above comments"
