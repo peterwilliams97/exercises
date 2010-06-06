@@ -160,9 +160,11 @@ def doTests():
   
     
 def pcaAdData(theshold_variance, in_filename, out_filename):   
-    """ Run PCA on the boolean columns of the ad data set
-        Read data from in_filename
-        Write data to out_filename
+    """ Run PCA on the Kushmerick add data
+        Stop when there are sufficient PCA components to explain threshold_variance
+        Project input data onto these PCA components
+        - in_filename : input data read from this CSV file
+        - out_filename : output data written to this CSV file
     """
     h2data = csv.readCsvRaw(in_filename)
     csv.validateMatrix(h2data)
@@ -174,33 +176,36 @@ def pcaAdData(theshold_variance, in_filename, out_filename):
     
     # Find the output dimension (#basis vectors) required to explain
     # threshold_variance
-    for odim in range(200, len(x[0]), 50):
+    print 'output_dim, explained_variance, time(sec)' 
+    for odim in range(50, len(x[0]), 50):
         start_time = time.clock()
         pcanode = mdp.nodes.PCANode(svd=True, output_dim = odim, dtype='float64')
         pcanode.train(x)
         p = pcanode.get_projmatrix()
         d = pcanode.output_dim
-        print 'output_dim', d
+        print '%10d' % d, ',',
         v = pcanode.explained_variance
-        print 'explained_variance', v
-        print 'time =', round((time.clock() - start_time)*1000.0)/1000.0, 'seconds'
+        print '%15.03f' % v, ',',
+        print '%6.1f' % (time.clock() - start_time)
         if v >= theshold_variance:
             break
+    #print '-----------------------------1'
     print 'p', len(p), len(p[0]) 
-    
+    #print '-----------------------------2'
     # Project out data onto PCA components    
     xfd = dot(x, p)    
     pca = [[x for x in row] for row in xfd]
     print 'pca', len(pca), len(pca[0])    
     pca_header = ['pca_%03d' % i for i in range(len(pca[0]))]
-    header = h2data[0][:3] + pca_header
-    num_data = [h2data[i+1][:3] + pca[i] for i in range(len(h2data)-1)] 
+    header = h2data[0][:3] + pca_header + [h2data[0][-1]]
+    num_data = [h2data[i+1][:3] + pca[i] + [h2data[i+1][-1]] for i in range(len(h2data)-1)] 
     data = [header] + num_data   
     csv.writeCsv(out_filename, data)
-     
+    #print '-----------------------------3'
     
 def normalizeData(in_fn, out_fn):
     "Normalize ad data to equal std dev"
+    print 'normalizeData:', in_fn, '=>', out_fn
     in_cells = csv.readCsvRaw(in_fn)
     csv.validateMatrix2(in_cells)
    # csv.writeCsv(in_fn, in_cells[:3280])
@@ -211,14 +216,14 @@ def normalizeData(in_fn, out_fn):
     
     def normalizeAxis(column):
         stdev = column.std() 
-        print stdev,
+       # print stdev,
         return [e/stdev for e in column]
     
     # http://www.scipy.org/Numpy_Example_List#head-528347f2f13004fc0081dce432e81b87b3726a33
     norm_values = apply_along_axis(normalizeAxis,0,values)
-    print
+    #print
     norm2_values = apply_along_axis(normalizeAxis,0,norm_values)
-    print
+    #print
     
     out_data = [[x for x in row] for row in norm_values]
     print 'out_data', len(out_data), len(out_data[0])  
@@ -238,7 +243,8 @@ def sortBy(vector, order):
     return [vector[i] for i in order]    
     
 def rankByCorrelationWithOutcomes(in_fn):
-    "Rank each attribute by its correlation with the outcoome"
+    "Rank each attribute by its correlation with the outcome"
+    print 'rankByCorrelationWithOutcomes:', in_fn
     in_cells = csv.readCsvRaw(in_fn)
     csv.validateMatrix(in_cells)
     
@@ -246,7 +252,7 @@ def rankByCorrelationWithOutcomes(in_fn):
     def strToFloat(s):
         return name_map[s.strip()]
     
-    #last column is ad categorie. normalize other columns
+    #last column is ad categories. normalize other columns
     in_data = [[float(e) for e in row[:-1]] for row in in_cells[1:]]
     print 'in_data', len(in_data), len(in_data[0])
     raw_outcomes = [strToFloat(row[-1]) for row in in_cells[1:]]
@@ -267,7 +273,7 @@ def rankByCorrelationWithOutcomes(in_fn):
     # print corr_index
     sort_order = [x[0] for x in corr_index]
     #print sort_order
-    return sort_order
+    return (sort_order, corr_index)
     
 def reorderMatrix(in_cells, order):
     "Reorder the len(order) left columns in a 2d matrix"
@@ -286,12 +292,13 @@ if __name__=='__main__':
     #doTests()
     
     explained_variance = 0.99
+    ev = str(int(explained_variance*100.0))
     # pca_filename = csv.headered_name_pca
-    pca_filename = csv.makeCsvPath('pca' + str(int(explained_variance)))
+    pca_filename = csv.makeCsvPath('pca' + ev)
     #pca_norm_filename = csv.headered_name_pca_norm
-    pca_norm_filename = csv.makeCsvPath('pca.norm' + str(int(explained_variance)))
+    pca_norm_filename = csv.makeCsvPath('pca' + ev + '.norm')
     #pca_norm_corr_filename = csv.headered_name_pca_corr
-    pca_norm_corr_filename = csv.makeCsvPath('pca.norm.corr' + str(int(explained_variance)))
+    pca_norm_corr_filename = csv.makeCsvPath('pca' + ev + '.norm.corr')
     
     if True:
         pcaAdData(explained_variance, csv.headered_name_pp, pca_filename)

@@ -28,7 +28,7 @@ def readCsvRaw(filename):
     "Reads a CSV file into a 2d array"
     lines = file(filename).read().strip().split('\n')
     entries = [[e for e in l.strip().split(',')] for l in lines]
-    print 'readCsvRaw', filename, len(entries), len(entries[0])
+    print 'readCsvRaw:', filename, len(entries), len(entries[0])
     validateMatrix(entries)
     return entries
 
@@ -40,7 +40,7 @@ def readCsvFloat(filename):
 
 def writeCsv(filename,matrix):
     "Writes a 2d array to a CSV file"
-    print 'writeCsv', filename, len(matrix), len(matrix[0])
+    print 'writeCsv:', filename, len(matrix), len(matrix[0])
     file(filename, 'w').write('\n'.join(map(lambda row: ','.join(map(str,row)), matrix)) + '\n')
     
 def modifyCsvRaw(in_filename,out_filename,modify_func):

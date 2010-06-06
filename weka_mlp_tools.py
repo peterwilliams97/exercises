@@ -43,28 +43,39 @@ def preprocess(raw_name, headered_name, headered_name_pp):
 	csv.replaceMissingValues(hdata)
 	csv.writeCsv(headered_name_pp, hdata)
 	
-def getPCACpts():
-	"Calculate the PCA components that explain 
-	 explained_variance = 0.99
-    # pca_filename = csv.headered_name_pca
-    pca_filename = csv.makeCsvPath('pca' + str(int(explained_variance)))
-    #pca_norm_filename = csv.headered_name_pca_norm
-    pca_norm_filename = csv.makeCsvPath('pca.norm' + str(int(explained_variance)))
-    #pca_norm_corr_filename = csv.headered_name_pca_corr
-    pca_norm_corr_filename = csv.makeCsvPath('pca.norm.corr' + str(int(explained_variance)))
+def getPCAProjections(input_filename):
+	""" Run PCA on the Kushmerick ad data
+        Stop when there are sufficient PCA components to explain threshold_variance
+        Project input data onto the top PCA components that explain threshold_variance
+        Normalize this data
+        Sort attributes by their correlation with output
+        - input_filename : prepocessed data
+        - Output 'pca': data projected onto PCA components
+        		 'norm': pca data normalized to std deviation 1
+        		 'corr': normalized data sorted by correlation with output
+  	"""
+  	print 'getPCAProjections:', input_filename
+ 	explained_variance = 0.99
+ 	root_name = 'pca%03d' % round(explained_variance * 100.0)
+ 	pca_filename = csv.makeCsvPath(root_name)
+ 	pca_norm_filename = csv.makeCsvPath(root_name + '.norm')
+ 	pca_norm_corr_filename = csv.makeCsvPath(root_name + '.norm.corr')
+ 	corr_index_filename = csv.makeCsvPath(root_name + '.corr.idx')
     
-    if True:
-        pcaAdData(explained_variance, csv.headered_name_pp, pca_filename)
-        
-    if True:
-        normalizeData(pca_filename, pca_norm_filename)    
-    
-    if True:
-        sort_order = rankByCorrelationWithOutcomes(pca_norm_filename)
-        def reorder(in_cells):
-            return reorderMatrix(in_cells, sort_order)
-        csv.modifyCsvRaw(pca_norm_filename, pca_norm_corr_filename, reorder)
-    return {'pca': pca_filename, 'norm':pca_norm_filename, 'corr':pca_norm_corr_filename}
+	if True:
+		pca.pcaAdData(explained_variance, input_filename, pca_filename)
+	
+	if True:
+		pca.normalizeData(pca_filename, pca_norm_filename)    
+	
+	if True:
+		sort_order, corr_index = pca.rankByCorrelationWithOutcomes(pca_norm_filename)
+		def reorder(in_cells):
+		    return pca.reorderMatrix(in_cells, sort_order)
+		csv.modifyCsvRaw(pca_norm_filename, pca_norm_corr_filename, reorder)
+		csv.writeCsv(corr_index_filename, corr_index)
+	
+	return {'pca': pca_filename, 'norm':pca_norm_filename, 'corr':pca_norm_corr_filename, 'index':corr_index_filename}
         
 		
 def getAccuracy(filename):	
@@ -626,6 +637,12 @@ if __name__ == '__main__':
 		# Pre-process the data by adding a header row and replacing missing values
 		# Do this once. Then use headered_name_pp
 		preprocess(raw_name, headered_name, headered_name_pp)
+		
+	if True:
+		# Project onto top PCA components, normalize to const stddev and 
+		# sort attributes by correlation with actual classificaiton
+		projections = getPCAProjections(headered_name_pp)
+		print 'projections', projections
 	
 	if False:
 		# Run MLP training on all the PCA components
