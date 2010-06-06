@@ -12,9 +12,16 @@ def dumpEnv():
 	for param in os.environ.keys():
 		print "%20s %s" % (param,os.environ[param])
 		
-def getAccuracy(fn):	
-	"Extract the accuracy from stdout save in file called fn"
-	results = file(fn, 'r').read().strip().split('\n')
+def checkExists(title, filename):
+	"Check that filename exists"	
+	if not os.path.exists(filename):
+		print title, filename, 'does not exist'
+		exit()
+				
+		
+def getAccuracy(filename):	
+	"Extract the accuracy from stdout save in file called filename"
+	results = file(filename, 'r').read().strip().split('\n')
 	found_cv = False
 	for line in results:
 		if line.find('Stratified cross-validation') >= 0:
@@ -28,6 +35,34 @@ def getAccuracy(fn):
 						print i, ':', s
 				accuracy = float(terms[4])
 	return accuracy
+
+def getPredictions(filename):	
+	"Extract Weka prediction from results stored in filename"
+	checkExists('Predictions file', filename)
+	prediction_file = file(filename, 'r').read().strip().split('\n')
+	found_header = False
+	results = []
+	for line in prediction_file:
+		if found_header:
+			terms = [s.strip() for s in line.split(' ') if not s == '']
+			inst = int(terms[0])
+			actual = terms[1]
+			predicted = terms[2]
+			if len(terms) > 4:
+				error = True
+				prediction = float(terms[4])
+			else:
+				error = False
+				prediction = float(terms[3])
+			r = {'inst':inst, 'actual':actual, 'predicted':predicted, 'error':error, 'prediction':prediction}
+			if False:
+				if r['error']:
+					print r
+			assert(r['error'] == (r['actual'] != r['predicted']))
+			results.append(r)
+		elif line.find('error prediction') >= 0:
+			found_header = True
+	return results
 
 def preprocess():
 	"Add headers and pre-process the data. This needs to be done once"
@@ -60,11 +95,7 @@ if True:
 def outnameToModelname(out_fn):	
 	return out_fn + '.model'
 	
-def checkExists(title, filename):	
-	if not os.path.exists(weka_jar):
-		print title, filename, 'does not exist'
-		exit()
-		
+
 def runWekaClass(out_fn, weka_cmds):
 	""" Run the Weka class weka_cmds
 		Write data to file out_fn
@@ -96,8 +127,8 @@ def runMLPPredict(data_filename, model_filename, predictions_filename):
 	checkExists('Data file', data_filename) 
 	checkExists('Model file', model_filename) 
 	duration = runWekaClass(predictions_filename, weka_mlp + ' -p 0 -T ' + data_filename + ' -l ' + model_filename) 
-	accuracy = getAccuracy(results_filename)
-	return (accuracy, duration)
+	#accuracy = getAccuracy(predictions_filename)
+	return duration
 
 def testMatrixMLP(matrix, columns, opts = mlp_opts):
 	"Run MLP on attributes with index in columns"
@@ -454,12 +485,9 @@ def testByNumberHidden(csv_matrix_name, output_basename, num_columns, num_cv = 4
 	
 	start_num_hidden = min(15, num_columns-1) 
 	delta_num_hidden = 10
-	#opts = '-M 0.5 -L 0.3 -x 4 -H '
-	#num_hidden = 13
-	
 	
 	results_name = csv.makePath(output_basename + '.results')
-	model_name = csv.makePath(output_basename + '.model')
+	model_name   = csv.makePath(output_basename + '.model')
 	csv_summary_name = csv.makeCsvPath(output_basename + '.summary')
 	csv_best_name    = csv.makeCsvPath(output_basename + '.best')
 	
@@ -634,15 +662,40 @@ if __name__ == '__main__':
 		testBySize(True)			
 		
 	if True:
-		csv_matrix_name = csv.makeCsvPath('subset.matrix035')	
-		num_columns = 10 
-		num_cv = 4
-		output_basename = 'number.hidden.col' + str(num_columns) + '.x' + str(num_cv) 
-		files = testByNumberHidden(csv_matrix_name, output_basename, num_columns, num_cv = 4)
-		# testBySize found best size was around 120
-		#testByNumberHidden(120, 10)
-		predictions_filename = csv.makePath(output_basename + '.predict')
-		runMLPPredict(files['best'], file['model'], predictions_filename)
+		if False:
+			csv_matrix_name = csv.makeCsvPath('subset.matrix035')	
+			num_columns = 10 
+			num_cv = 4
+			output_basename = 'number.hidden.col' + str(num_columns) + '.x' + str(num_cv) 
+			files = testByNumberHidden(csv_matrix_name, output_basename, num_columns, num_cv = 4)
+			# testBySize found best size was around 120
+			#testByNumberHidden(120, 10)
+			predictions_filename = csv.makePath(output_basename + '.predict')
+			runMLPPredict(files['best'], files['model'], predictions_filename)
+			files['predict'] = predictions_filename
+			print files
+		if True:
+			predictions_filename =  'C:\\dev\\5167assigment1\\number.hidden.col10.x4.predict'
+			predictions = getPredictions(predictions_filename)
+			def meanPrediction(predictions):
+				return sum([p['prediction'] for p in predictions])/float(len(predictions))
+			def getPredictionAccuracy(predictions):
+				if len(predictions) == 0:
+					return 0.0
+				else:
+					return float(len([p for p in predictions if not p['error']]))/float(len(predictions))
+			def getPredictionAccuracyThreshold(predictions, threshold):
+				predictions_subset = [p for p in predictions if p['prediction'] >= threshold]
+				accuracy =  getPredictionAccuracy(predictions_subset)
+				fraction = float(len(predictions_subset))/float(len(predictions))
+				return accuracy, len(predictions_subset), fraction
+			print 'mean prediction all     ', '%.03f' % meanPrediction(predictions)
+			print 'mean prediction error   ', '%.03f' % meanPrediction([p for p in predictions if p['error']])
+			print 'prediction accuracy all ', '%.03f' % getPredictionAccuracy(predictions)
+			for i in range(11):
+				threshold = 0.5 + float(i)*0.05
+				accuracy,number, fraction = getPredictionAccuracyThreshold(predictions, threshold)
+				print 'prediction accuracy', '%.02f' % threshold, '%.03f' % accuracy, number, '%.03f' % fraction
 		#row_index = getRowsFromPredictionsFile(predictions_filename)
 		#do pca on this file,train and repeat
 				
