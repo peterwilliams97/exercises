@@ -322,21 +322,16 @@ def crossOver(c1, c2):
 	"Swap half the elements in c1 and c2"
 	assert(len(c1) == len(c2))
 	n = len(c1)
-	#shuffle_list = random.sample(range(n), n/2)
 	d1, d2 = c1[:], c2[:]
 	# Find elements that are not in both lists
 	d1.sort(key = lambda x: x in d2)
 	d2.sort(key = lambda x: x in d1)
-	#print 'xover', (d1,d2)
 	for i1,x in enumerate(d1):
 		if x in d2:
-			#print x, 'in', d2
 			break
 	for i2,x in enumerate(d2):
 		if x in d1:
-			#print x, 'in', d1
 			break
-	#print 'xover', (i1,i2)
 	m = min(i1, i2)  #
 	shuffle_list = random.sample(range(m), min(n/2,m))
 	for i in shuffle_list:
@@ -356,14 +351,14 @@ def testCrossOver():
 		d1,d2 = crossOver(c1,c2)
 		print 'crossOver', (c1,c2), '=>', (d1,d2)
 	
-def findBestOfSize(matrix, num_subset, num_trials, csv_results_name):
+def findBestOfSize(matrix, num_subset, num_trials, csv_summary_name):
 	"Find best result on num_subset columns of matrix entries"
 	num_attribs = len(matrix[0])-1  # last column is category
 	print 'findBestOfSize', len(matrix), num_attribs, 'num_subset', num_subset, 'num_trials', num_trials
 	num_tried = 0
 	results = []
 	
-	csv_results = file(csv_results_name, 'w')
+	csv_summary = file(csv_summary_name, 'w')
 	
 	def doOneRun(columns, show):
 		accuracy, temp_csv, temp_results,duration = testMatrixMLP(matrix,columns)
@@ -378,10 +373,11 @@ def findBestOfSize(matrix, num_subset, num_trials, csv_results_name):
 				print '    ',i, ':', rr['accuracy'],rr['columns'], int(rr['duration'])
 		summary = [num_subset, num_tried, accuracy, '"' + str(columns) + '"', temp_csv, temp_results, duration]
 		csv_line = ','.join([str(e) for e in summary])
-		csv_results.write(csv_line + '\n')
-		csv_results.flush()
+		csv_summary.write(csv_line + '\n')
+		csv_summary.flush()
 		return num_tried + 1
-		
+	
+	# Pass through all attributes once to build the initial population	
 	for i in range(0, num_attribs, num_subset):
 		if i + num_subset > num_attribs:
 			i = num_attribs - num_subset 
@@ -618,15 +614,15 @@ def testCostMatrix(num_columns, num_cv = 4):
 # Input data - Don't touch this    
 raw_name = csv.makeCsvPath('ad1')
 # Input data with header. Needs to be generated once
-headered_name = csv.makePath('header')
+headered_name = csv.makeCsvPath('header')
 #Input data with header and pre-processing
-headered_name_pp = csv.makePath('header.pp')   
+headered_name_pp = csv.makeCsvPath('header.pp')   
 # PCA on headered_name_pp
-headered_name_pca = csv.makePath('header.pp.pca')  
+#headered_name_pca = csv.makePath('header.pp.pca')  
 # PCA data normalized to stdev == 1
-headered_name_pca_norm = csv.makePath('header.pp.pca.norm')            
+#headered_name_pca_norm = csv.makePath('header.pp.pca.norm')            
 # PCA data normalized to stdev == 1 by correlation with outcome
-headered_name_pca_corr = csv.makePath('header.pp.pca.norm.corr_order')
+#headered_name_pca_corr = csv.makePath('header.pp.pca.norm.corr_order')
 
 if __name__ == '__main__':
 	
