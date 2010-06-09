@@ -1,8 +1,6 @@
 """
-A set of tools for running  the Weka MLP function and analyzing its output
-This class is 
-weka.classifiers.functions.MultilayerPerceptron
-
+A set of tools for running  the Weka MLP  and analyzing its output
+The Weka MLP is weka.classifiers.functions.MultilayerPerceptron
 """
 import shlex, subprocess, os, time, random, copy, shutil, csv, pca
 
@@ -53,6 +51,7 @@ def getPCAProjections(input_filename):
         - Output 'pca': data projected onto PCA components
         		 'norm': pca data normalized to std deviation 1
         		 'corr': normalized data sorted by correlation with output
+        		 'index': 
   	"""
   	print 'getPCAProjections:', input_filename
  	explained_variance = 0.99
@@ -62,30 +61,25 @@ def getPCAProjections(input_filename):
  	pca_norm_corr_filename = csv.makeCsvPath(root_name + '.norm.corr')
  	corr_index_filename = csv.makeCsvPath(root_name + '.corr.idx')
     
-	if True:
-		pca.pcaAdData(explained_variance, input_filename, pca_filename)
+	pca.pcaAdData(explained_variance, input_filename, pca_filename)
+	pca.normalizeData(pca_filename, pca_norm_filename)    
 	
-	if True:
-		pca.normalizeData(pca_filename, pca_norm_filename)    
-	
-	if True:
-		sort_order, corr_index = pca.rankByCorrelationWithOutcomes(pca_norm_filename)
-		def reorder(in_cells):
-		    return pca.reorderMatrix(in_cells, sort_order)
-		csv.modifyCsvRaw(pca_norm_filename, pca_norm_corr_filename, reorder)
-		csv.writeCsv(corr_index_filename, corr_index)
+	sort_order, corr_index = pca.rankByCorrelationWithOutcomes(pca_norm_filename)
+	def reorder(in_cells):
+	    return pca.reorderMatrix(in_cells, sort_order)
+	csv.modifyCsvRaw(pca_norm_filename, pca_norm_corr_filename, reorder)
+	csv.writeCsv(corr_index_filename, corr_index)
 	
 	return {'pca': pca_filename, 'norm':pca_norm_filename, 'corr':pca_norm_corr_filename, 'index':corr_index_filename}
         
-		
+	
 def getAccuracy(filename):	
-	"Extract the accuracy from stdout save in file called filename"
+	"Extract the accuracy from the stdout of a Weka classifer saved in a file called filename"
 	results = file(filename, 'r').read().strip().split('\n')
 	found_cv = False
 	for line in results:
 		if line.find('Stratified cross-validation') >= 0:
 			found_cv = True
-			#print 'found_cv'
 		if found_cv:
 			if line.find('Correctly Classified Instances') >= 0:
 				terms = [s.strip() for s in line.split(' ') if not s == '']
@@ -123,7 +117,6 @@ def getPredictions(filename):
 			found_header = True
 	return results
 
-
 	
 # Locations of Weka files on my computer. This will need to be customized
 # for each computer that runs this program	
@@ -140,7 +133,6 @@ if True:
 def outnameToModelname(out_fn):	
 	return out_fn + '.model'
 	
-
 def runWekaClass(out_fn, weka_cmds):
 	""" Run the Weka class weka_cmds
 		Write data to file out_fn
@@ -216,7 +208,6 @@ def makeWekaOptions(learning_rate, momentum, number_hidden, num_cv, costs = None
 		file(cost_matrix_path, 'w').write('\n'.join(cost_matrix))
 	return mapToWekaOptions(options_map)
 	
-
 def makeRankings(roulette):
 	"Rankings for use in roulette"
 	ranks = copy.deepcopy(roulette)
@@ -236,20 +227,12 @@ def spinRouletteWheel(roulette_in):
 	"""
 	show = False
 	roulette = makeRankings(roulette_in)
-	if show:
-		print '--------------------'
-		print 'roulette', roulette
 	total = float(sum([x['weight'] for x in roulette]))
 	v = total*random.random()
-	#print 'v', v, 'total', total
 	base = 0.0
 	for x in roulette:
 		top = base + float(x['weight'])
-		#print x[0], [base, top], ';',
 		if v <= top:
-			if show:
-				print '--------------------'
-				print 'roulette winner', x, v, total
 			return x['idx']
 		base = top
 	# If we get here something is wrong, so dump out state
@@ -332,7 +315,7 @@ def crossOver(c1, c2):
 	for i2,x in enumerate(d2):
 		if x in d1:
 			break
-	m = min(i1, i2)  #
+	m = min(i1, i2)  # number of non-shared elements
 	shuffle_list = random.sample(range(m), min(n/2,m))
 	for i in shuffle_list:
 		d1[i], d2[i] = d2[i], d1[i]
@@ -425,7 +408,6 @@ def findBestOfSize(matrix, num_subset, num_trials, csv_summary_name):
 			if converged:
 				print 'Converged after', num_tried - ga_base, 'GA rounds'
 				break
-		
 	return results
 
 def selectAttibutesGA():
