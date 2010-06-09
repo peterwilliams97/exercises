@@ -525,7 +525,7 @@ def testByNumberHidden(csv_matrix_name, output_basename, num_columns, num_cv = 4
 		num_cv is the number of cross-validation rounds
 	"""
 	
-	start_num_hidden = min(15, num_columns-1) 
+	start_num_hidden = min(10, num_columns-1) 
 	delta_num_hidden = 10
 	
 	results_name = csv.makePath(output_basename + '.results')
@@ -634,7 +634,7 @@ if __name__ == '__main__':
 		# Do this once. Then use headered_name_pp
 		preprocess(raw_name, headered_name, headered_name_pp)
 		
-	if True:
+	if False:
 		# Project onto top PCA components, normalize to const stddev and 
 		# sort attributes by correlation with actual classificaiton
 		projections = getPCAProjections(headered_name_pp)
