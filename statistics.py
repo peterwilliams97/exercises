@@ -88,11 +88,12 @@ def write_csv(filename, matrix):
     
 def binomialCoefficient(a, b):
     "Return a!/b!"
-    print 'bc', a, b
+    print 'binomialCoefficient', a, b,
     assert(a >= b)
     x = 1.0
     for i in range(b+1, a+1):
         x = x * float(i)
+    print '=>', x
     return x
 
 def fisherExact(table):
@@ -108,7 +109,7 @@ def fisherExact(table):
 if __name__ == '__main__':
     if False:
         if len(sys.argv) != 2:  
-            sys.exit("Specicify a csv file")
+            sys.exit("Specify a csv file")
         print "argv[1] = ", sys.argv[1]
         mat = read_csv2(sys.argv[1])
         show_mat("input", mat)  # print "mat = ", mat
@@ -123,9 +124,14 @@ if __name__ == '__main__':
         corr = corr_mat(cov, var)
         show_mat("corr", corr)
     table = ((1, 9), (11, 3))
-    print 'table', table
     f = fisherExact(table)
-    print 'fisherExact', f
+    print 'fisherExact', table, '=>', f
+    table = ((1, 2), (1, 2))
+    f = fisherExact(table)
+    print 'fisherExact', table, '=>', f
+    table = ((1, 2), (2, 4))
+    f = fisherExact(table)
+    print 'fisherExact', table, '=>', f
  # prod = mul_mat(mat)
   #  print "prod = ", prod
   #  print "mat = ", mat
