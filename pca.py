@@ -22,7 +22,7 @@ def covTest():
     variance = cov(x, bias=1)               # normalized by N
     T = array([1.3, 4.5, 2.8, 3.9])         # temperature measurements
     P = array([2.7, 8.7, 4.7, 8.2])         # corresponding pressure measurements
-    TPcov = cov(T,P)                                # covariance between temperature and pressure
+    TPcov = cov(T,P)                        # covariance between temperature and pressure
     rho = array([8.5, 5.2, 6.9, 6.5])       # corresponding density measurements
     data = column_stack([T,P,rho])
     print 'T',T
@@ -93,32 +93,23 @@ def makeBasisVectors(num_vecs, size):
 
 def makeWeights(num_vecs):
     "Make a set of num_vecs random weights"
-    w = [random.random() for i in range(num_vecs)]
-    #print 'makeWeights', w 
-    return w
-
+    return [random.random() for i in range(num_vecs)]
+ 
 def applyWeights(vectors, weights):
     "Returns sum(i,v[i]*w[i])"
     assert(len(vectors) == len(weights))
-    #print 'applyWeights', weights
     def getSum(i):
-        v,w = vectors,weights
-        #print 'w', w
-        #print 'v', v
-        return sum([v[j][i]*w[j] for j in range(len(w))])
+        return sum([vectors[j][i]*weights[j] for j in range(len(weights))])
     return [getSum(i) for i in range(len(vectors[0]))]
  
 def makeVectorSamples(num_vecs, size, num_samples):
     vectors = makeBasisVectors(num_vecs, size)
-    #print 'vectors', vectors
     weights_arr = [makeWeights(num_vecs) for i in range(num_samples)]
-    #print 'weights_arr', weights_arr
-    vectors = [applyWeights(vectors, w) for w in weights_arr]
-    return vectors
-    
+    return [applyWeights(vectors, w) for w in weights_arr]
+      
 def mdpTestRandom(num_vecs, size, num_samples, verbose): 
-    '''Do PCA on a data set of num_samples random vectors of length size
-       based on num_vecs basis vectors'''
+    """Do PCA on a data set of num_samples random vectors of length size
+       based on num_vecs basis vectors"""
     print '--------------------------------------------------------'
     print 'mdpTestRandom: num_vecs =', num_vecs, 'size =', size, 'num_samples =', num_samples
     start_time = time.clock()

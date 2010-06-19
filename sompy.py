@@ -1,5 +1,9 @@
 from __future__ import division
 """
+
+http://www.cis.hut.fi/projects/somtoolbox/theory/somalgorithm.shtml
+http://www.cis.hut.fi/research/som_lvq_pak.shtml
+
 Kyle Dickerson
 kyle.dickerson@gmail.com
 Jan 15, 2008
@@ -23,6 +27,26 @@ from math import *
 import sys
 import scipy
 
+seed(0)
+
+def myRnd(x):
+    return float(int(x*100.0))/100.0
+
+def rnd(x):
+    return str(myRnd(x)) 
+
+def getLength(v):
+    """ Returns length of vector v"""
+    return sqrt(sum([x**2 for x in v]))
+
+def getNormalizedArray(num_elements):
+    """ Returns a normalized array with num_elements elements """
+    l = 0.0
+    while l < float(num_elements)*0.1:
+        v = [random() for i in range(num_elements)]
+        l = getLength(v)
+    return [x/l for x in v]
+
 class SOM:
 
     def __init__(self, height=10, width=10, FV_size=10, learning_rate=0.005):
@@ -31,17 +55,26 @@ class SOM:
         self.FV_size = FV_size
         self.radius = (height+width)/3
         self.learning_rate = learning_rate
-        self.nodes = scipy.array([[ [random()*255 for i in range(FV_size)] for x in range(width)] for y in range(height)])
+        self.nodes = scipy.array([[getNormalizedArray(FV_size) for x in range(width)] for y in range(height)])
+        self.node_matches = [[ [] for x in range(width)] for y in range(height)]
+        self.unmatched = []
     
-    def train(self, iterations=1000, train_vector=[[]]):
+    def train(self, iterations=1000, input_train_vector=[[]]):
         """  train_vector: [ FV0, FV1, FV2, ...] -> [ [...], [...], [...], ...]
              train vector may be a list, will be converted to a list of scipy arrays
              FVi is a feature vector
         """
-        for t in range(len(train_vector)):
-            train_vector[t] = scipy.array(train_vector[t])
+        raw_train_vector = [scipy.array(v) for v in input_train_vector]  
+        train_vector_lengths = [getLength(v) for v in raw_train_vector]
+        max_length = max(train_vector_lengths)
+        threshold = max_length/100.0
+        n = len(raw_train_vector)
+        train_vector = [raw_train_vector[i]/train_vector_lengths[i] for i in range(n) if train_vector_lengths[i] > threshold]   
+            
         time_constant = iterations/log(self.radius)
         delta_nodes = scipy.array([[[0 for i in range(self.FV_size)] for x in range(self.width)] for y in range(self.height)])
+        
+        print 'training:', 'height', self.height, 'width', self.width, 'radius', self.radius, 'learning rate', self.learning_rate
         
         for i in range(1, iterations+1):
             delta_nodes.fill(0)
@@ -49,7 +82,8 @@ class SOM:
             rad_div_val = 2 * radius_decaying * i
             learning_rate_decaying = self.learning_rate * exp(-1.0*i/time_constant)
             if i % int((iterations+99)/100) == 0 or i == iterations:
-                sys.stdout.write("\rTraining Iteration: " + str(i) + "/" + str(iterations))
+                sys.stdout.write("\rTraining Iteration: " + str(i) + "/" + str(iterations) 
+                                 + ", rad dec = " + rnd(radius_decaying) + ", rad div = " + rnd(rad_div_val) + ", lr decay = " + rnd(learning_rate_decaying))
             
             for j in range(len(train_vector)):
                 best = self.best_match(train_vector[j])
@@ -60,6 +94,33 @@ class SOM:
                     
             self.nodes += delta_nodes
         sys.stdout.write('\n')
+        
+        print '----------- Nodes --------------'
+        for y in range(self.height):
+            for x in range(self.width):
+                print y, ',', x, self.nodes[y,x]
+        # Find the input vectors matching the normalized vectors and place them in the appropriate 
+        # cluster bins
+        j = 0
+        for i in range(len(input_train_vector)):
+            if train_vector_lengths[i] > threshold:
+                y,x = self.best_match(train_vector[j])
+                print 'best match', (i, j), ',', (y,  x), train_vector_lengths[i], input_train_vector[i], train_vector[j], self.nodes[y,x]
+                self.node_matches[y][x].append(input_train_vector[i])
+                j += 1
+            else:
+                self.unmatched.append(input_train_vector[i])
+        print '----------- Clusters --------------'
+        for y in range(self.height):
+            for x in range(self.width):
+                if len(self.node_matches[y][x]) > 0:
+                    print 'Cluster', (y, x), len(self.node_matches[y][x]), 'elements', self.nodes[y,x]
+                    for m in self.node_matches[y][x]:
+                        print '  ', m
+        print 'Unmatched:', len(self.unmatched), 'elements'
+        for m in self.unmatched:
+            print '  ', m         
+            
     
     def find_neighborhood(self, pt, dist):
         """ Returns a list of points which live within 'dist' of 'pt'
@@ -83,11 +144,11 @@ class SOM:
             target_FV is a scipy array
         """
         loc = scipy.argmin((((self.nodes - target_FV)**2).sum(axis=2))**0.5)
-        y = 0
-        while loc > self.width:
-            loc -= self.width
-            y += 1
         x = loc
+        y = 0
+        while x >= self.width:
+            x -= self.width
+            y += 1
         return (y, x)
 
     def FV_distance(self, FV_1, FV_2):
@@ -99,15 +160,25 @@ class SOM:
 if __name__ == "__main__":
     print 'Initialization...'
     colors = [ [0, 0, 0], [0, 0, 255], [0, 255, 0], [0, 255, 255], [255, 0, 0], [255, 0, 255], [255, 255, 0], [255, 255, 255]]
-    colors = [ [100, 100, 0], 
+    colors = [[0, 0,   0], 
+              [0, 20, 20],      [30, 0, 30],
+              [0, 120, 120],   [130, 0, 130],
+              [0, 220, 220],   [230, 0, 230],
+              [0, 20, 21],      [30, 0, 31],
+              [0, 20, 22],      [30, 0, 32],
+              [0, 20, 23],      [30, 0, 33],
+              [0, 20, 25],      [30, 0, 35],
+              [0, 20, 40],   [30, 0, 60],
+              [0, 40, 20],   [60, 0, 30],
+              [100, 100, 0], [20, 20, 0],  [20, 20, 0], [200, 200, 0],
               [0, 0, 255], [0, 255, 0], [255, 0, 0],
               [0, 0, 200], [0, 201, 0], [202, 0, 0],
               [0, 0, 120], [0, 150, 0], [160, 0, 0],
               [0, 0,  55], [0,  55, 0], [ 55, 0, 0]  ]
   
     
-    width = 32
-    height = 32
+    width = 12 # 32
+    height = 12 # 32
     color_som = SOM(width,height,3,0.05)
     print 'Training colors...'
     color_som.train(2000, colors)
