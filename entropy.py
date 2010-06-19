@@ -1,10 +1,10 @@
-'''
+"""
 
                         
 Created on 28/04/2010
 
 @author: peter
-'''
+"""
 import copy, decimal
 from math import *
     
@@ -41,19 +41,16 @@ def ff(i):
 def test(dm, p):
     e =  entropy(p)
     n = len(p)
-    print n, my_r(dm), ')', clean(p), ':', my_r(e), my_r(2.0 **e), my_r((2.0 **e)/n)
-
-            
-
-    
-    
+    print n, my_r(dm), ') probs=', clean(p), ': entropy =', my_r(e), ', 2.0**e =', my_r(2.0 **e), ', 2.0**e/n =',my_r((2.0 **e)/n)
+   
 def test1():    
+    p0 = [0.5, 0.5]
     p1 = [0.1, 0.9]
-    p2 = [0.5, 0.5]
+    p2 = [0.01, 0.99]
     n = 10
     p3 = [1.0/n for i in range(n)]
     
-    for p in [p1, p2, p3]:
+    for p in [p0, p1, p2, p3]:
         test(0, p)
      
     for n in range(1, 11):
@@ -69,7 +66,7 @@ def test1():
             p = [m + ff(i)*dm  for i in range(n)]
             test(dm, p)
     
-if __name__ == '__main__':
+def test2():
     no = False
     yes = True
     vals = {'(-inf-99.5]': (no, 197, 16),
@@ -99,3 +96,6 @@ if __name__ == '__main__':
         e = dist_entropies[i]
         f = dist_fracs[i]
         print v[0], ',', v[1], ',', e, ',', f
+        
+if __name__ == '__main__':
+    test1()

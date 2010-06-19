@@ -1,4 +1,4 @@
-'''
+"""
 Runs a self-organizing map algorithm over given input data and initial 
 weights for user specified eta and weight updating functions.
 
@@ -13,7 +13,7 @@ is a formatted version of such a map.csv
 Created on 24/04/2010
 
 @author: peter
-'''
+"""
 import copy 
 from math import *
     
@@ -36,23 +36,23 @@ def eta(t):
     return 0.6 / 2**int(t/4)
 
 def updateFunc(wv, i, t):
-    ''' User defined function for updating weights vector wv
+    """ User defined function for updating weights vector wv
         wv = old weights vector
         i = input vector
         t = iteration number 
         returns weights vector for iteration t+1
         Algorithm: w(t+1) = w(t) + eta(t)*(i-w(t))
-    '''
+    """
     return map(lambda x: x[1] + eta(t)*(x[0]-x[1]), zip(i,wv))
 
 def updateWeights(w, i, t, d):
-    ''' Updates  weights in one iteration of the self-organizing map algorithm
+    """ Updates  weights in one iteration of the self-organizing map algorithm
         w = old weights, 2 vectors
         i = input vector
         t = iteration number
         d = distances between w's and i
         Algorithm: update the w that is closest to i
-    '''
+    """
     w_new = copy.deepcopy(w)
     j = 0 if d[0] < d[1] else 1
     w_new[j] = updateFunc(w[j],i,t)

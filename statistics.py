@@ -123,15 +123,21 @@ if __name__ == '__main__':
         show_mat("cov", cov)#   print "cov = ", cov
         corr = corr_mat(cov, var)
         show_mat("corr", corr)
-    table = ((1, 9), (11, 3))
-    f = fisherExact(table)
-    print 'fisherExact', table, '=>', f
-    table = ((1, 2), (1, 2))
-    f = fisherExact(table)
-    print 'fisherExact', table, '=>', f
-    table = ((1, 2), (2, 4))
-    f = fisherExact(table)
-    print 'fisherExact', table, '=>', f
+    if True:
+        tables = [((1, 1), (1, 1)),
+                  ((2, 2), (2, 2)),
+                  ((2, 2), (1, 1)),
+                  ((1, 2), (1, 2)),
+                  ((1, 2), (2, 4)),
+                  ((1, 9), (11, 3))]
+        for t in tables:
+            print '-----------------'
+            print 'Contingency ', t[0][0], t[0][1]
+            print 'table       ', t[1][0], t[1][1]
+            f = fisherExact(t)
+            print 'fisherExact', t, '=>',  f
+           
+        
  # prod = mul_mat(mat)
   #  print "prod = ", prod
   #  print "mat = ", mat
