@@ -76,13 +76,22 @@ def getInitNodes(vectors, height, width):
             node[0,w] = pca_cpts[2]
             node[h,w] = -pca_cpts[0] 
         """
-        fx = x/(width-1) 
-        fy = y/(height-1)
-        v = (1.0-fy-fx)*pca_cpts[0] + fy*(1.0-fx)*pca_cpts[1] + fx*(1.0-fy)*pca_cpts[1]
         if False:
-            fx = 1.0 - 2*x/(width-1) 
-            fy = 1.0 - 2*y/(height-1) 
-            v = pca_cpts[2] if (fx == 0.0 and fy == 0.0) else fy*pca_cpts[0] + fx*pca_cpts[1]
+            fx = x/(width-1) 
+            fy = y/(height-1)
+            v = (1.0-fy-fx)*pca_cpts[0] + fy*(1.0-fx)*pca_cpts[1] + fx*(1.0-fy)*pca_cpts[1]
+        else:
+            fx = 1.0 - 2.0*x/(width-1) 
+            fy = 1.0 - 2.0*y/(height-1) 
+            z = (fx**2 + fy**2)**0.5
+            if fx == 0.0 and abs(fy) < 1.0:
+                fz = (1-fy)**2
+            elif fy == 0.0 and abs(fx) < 1.0:
+                fz = -(1-fx)**2
+            else:
+                fz = 0.0
+            #fz = (1+z)**-4.0 if abs < 0.2 else 0.0
+            v =  fy*pca_cpts[0] + fx*pca_cpts[1] + fz*pca_cpts[2]
         l = getLength(v)
         if l < 0.01:
             print 'PCA mixture too short', v, l
@@ -167,6 +176,9 @@ class SOM:
                     #    print '!', delta_nodes[loc[0],loc[1]]
                     
             self.nodes += delta_nodes
+            
+            # !@#$ Nodes with that are far from data keep growing in size
+            #      How can this be??
             max_delta_node = maxNode(delta_nodes, self.height, self.width)
             if not max_delta_node == None:   # !@#$
                 if getLength(max_delta_node) > 1000.0:
