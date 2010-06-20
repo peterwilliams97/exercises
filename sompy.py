@@ -4,6 +4,16 @@ from __future__ import division
 http://www.cis.hut.fi/projects/somtoolbox/theory/somalgorithm.shtml
 http://www.cis.hut.fi/research/som_lvq_pak.shtml
 
+Initialize nodes with PCA cpts p0, p1, p2 in 0 
+    0 <= x < W
+    0 <= y < H
+    fx = x/(W-1) fy = y(H-1)
+    node[y,x] = (1-fy-fx)p0 + fy*p1 + fx*p2
+ => node[0,0] = p0
+    node[H,0] = p1
+    node[0,W] = p2
+    node[H,W] = -p0 + p1 + p2
+
 Kyle Dickerson
 kyle.dickerson@gmail.com
 Jan 15, 2008

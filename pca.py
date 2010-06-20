@@ -34,8 +34,7 @@ def covTest():
 
 def describe(module):
     "Print some information about a module"
-    print module.__name__, module.__file__
-    
+    print module.__name__, module.__f  
     
 def mdpTest(): 
     "Do PCA on a data set"  
@@ -149,9 +148,32 @@ def doTests():
     mdpTestRandom(2, 1000, 1500, False) #  50 sec
     mdpTestRandom(2, 1559, 3279, False) # 170 sec
   
-    
+def getPcaCpts(input_data, num_cpts):
+    """ Return first num_cpts PCA cpts for data"""
+    start_time = time.clock()
+    data = array(input_data)
+    pcanode = mdp.nodes.PCANode(svd=True, output_dim = num_cpts, dtype='float64')
+    pcanode.train(data)
+    p = pcanode.get_projmatrix()
+    width = len(input_data[0])
+    id = scipy.eye(width, width)
+    #print 'id', id
+    #out = pcanode(id)
+    d = pcanode.output_dim
+    print 'output dim =', d, ',',
+    v = pcanode.explained_variance
+    print 'explained variance = %.3f' % v, ',',
+    print 'time = %.1f' % (time.clock() - start_time) 
+    if False:
+        print 'projection matrix'
+        print p
+        print 'output data'
+        print  pcanode(data)
+    #return out[:num_cpts]
+    return p
+       
 def pcaAdData(theshold_variance, in_filename, out_filename):   
-    """ Run PCA on the Kushmerick add data
+    """ Run PCA on the Kushmerick ad data
         Stop when there are sufficient PCA components to explain threshold_variance
         Project input data onto these PCA components
         - in_filename : input data read from this CSV file
@@ -193,33 +215,38 @@ def pcaAdData(theshold_variance, in_filename, out_filename):
     data = [header] + num_data   
     csv.writeCsv(out_filename, data)
     #print '-----------------------------3'
+ 
+def normalizeMatrix(in_data):    
+    """ Normalize data to mean=0.0, stdev=1.0
+        in_data : input 2D array 
+        return : normalized matrix
+    """
+    def normalizeAxis(column):
+        mean = column.mean()
+        stdev = column.std() 
+        return [(e-mean)/stdev for e in column]
+    
+    # http://www.scipy.org/Numpy_Example_List#head-528347f2f13004fc0081dce432e81b87b3726a33
+    norm_values = apply_along_axis(normalizeAxis, 0, array(in_data))
+    return [[x for x in row] for row in norm_values]
     
 def normalizeData(in_fn, out_fn):
-    "Normalize ad data to equal std dev"
+    """ Normalize ad data to equal std dev
+        in_fn : read input data from this csv file
+        out_fn : write output data to this csv fuile
+    """
     print 'normalizeData:', in_fn, '=>', out_fn
     in_cells = csv.readCsvRaw(in_fn)
     csv.validateMatrix2(in_cells)
-   # csv.writeCsv(in_fn, in_cells[:3280])
-    #last column is ad categorie. normalize other columns
+  
+    # Remove header row on top and category row on right
     in_data = [[float(e.strip()) for e in row[:-1]] for row in in_cells[1:3280]]
     print 'data', len(in_data), len(in_data[0])
-    values = array(in_data)
-    
-    def normalizeAxis(column):
-        stdev = column.std() 
-       # print stdev,
-        return [e/stdev for e in column]
-    
-    # http://www.scipy.org/Numpy_Example_List#head-528347f2f13004fc0081dce432e81b87b3726a33
-    norm_values = apply_along_axis(normalizeAxis,0,values)
-    #print
-    norm2_values = apply_along_axis(normalizeAxis,0,norm_values)
-    #print
-    
-    out_data = [[x for x in row] for row in norm_values]
+        
+    out_data = normalizeMatrix(in_data)
     print 'out_data', len(out_data), len(out_data[0])  
+    
     out_cells = [in_cells[0]] + [out_data[i-1] + [in_cells[i][-1]] for i in range(1,len(in_cells))]  
-   
     csv.writeCsv(out_fn, out_cells)
     
 def correlation(v1, v2):
