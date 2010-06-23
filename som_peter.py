@@ -1,5 +1,7 @@
 from __future__ import division
 """
+Main
+http://www.ensmp.fr/~moutarde/FAQs/Neuron-faq/FAQ.html#A_Kohonen
 
 http://www.cis.hut.fi/projects/somtoolbox/theory/somalgorithm.shtml
 http://www.cis.hut.fi/research/som_lvq_pak.shtml
@@ -179,10 +181,11 @@ class SOM:
             
             # !@#$ Nodes with that are far from data keep growing in size
             #      How can this be??
-            max_delta_node = maxNode(delta_nodes, self.height, self.width)
-            if not max_delta_node == None:   # !@#$
-                if getLength(max_delta_node) > 1000.0:
-                    print 'max delta node =', max_delta_node
+            if False:
+                max_delta_node = maxNode(delta_nodes, self.height, self.width)
+                if not max_delta_node == None:   # !@#$
+                    if getLength(max_delta_node) > 1000.0:
+                        print 'max delta node =', max_delta_node
         sys.stdout.write('\n')
         
         printNodes(self.nodes, self.height, self.width)

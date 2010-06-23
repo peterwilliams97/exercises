@@ -193,11 +193,11 @@ if __name__ == '__main__':
     if False:
         print 'Question 1 ++++++++++++++++++++++++++'
         question1()
-    if False:
+    if True:
         print 'Question 2 ++++++++++++++++++++++++++'
         question2()
         
-    if True:
+    if False:
         x0 = [1, -1, 1, -1]
         x1 = [-1, -1, -1, 1]
         print x0
