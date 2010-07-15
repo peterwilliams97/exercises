@@ -1,20 +1,13 @@
-'''
+"""
 Use NumPy, SciPy and MDP to do PCA on an advert classification data set
 See http://mdp-toolkit.sourceforge.net/index.html#DOWINS
 
 Created on 16/05/2010
 
 @author: peter
-'''
-import numpy
+"""
+import numpy, scipy, mdp, bimdp, csv, random, time
 from numpy import *
-import scipy
-import mdp
-import bimdp
-import csv
-import random
-import time
-
 
 def covTest():
     x = array([1., 3., 8., 9.])
