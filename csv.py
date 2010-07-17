@@ -1,10 +1,10 @@
-'''
-manipulate csv files
+"""
+manipulate .csv files
 Clean advertisement detection trainging set file
 
 Peter
 16/05/2010
-'''
+"""
 import copy,os,time
 from math import *
 from operator import itemgetter
@@ -38,8 +38,9 @@ def readCsvFloat(filename):
     matrix = [[float(e) for e in row] for row in entries]
     return matrix    
 
-def writeCsv(filename,matrix):
+def writeCsv(filename, in_matrix, header = None):
     "Writes a 2d array to a CSV file"
+    matrix = [header] + in_matrix if header else in_matrix
     print 'writeCsv:', filename, len(matrix), len(matrix[0])
     file(filename, 'w').write('\n'.join(map(lambda row: ','.join(map(str,row)), matrix)) + '\n')
     

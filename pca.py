@@ -27,7 +27,7 @@ def covTest():
 
 def describe(module):
     "Print some information about a module"
-    print module.__name__, module.__f  
+    print module.__name__, module.__file__  
     
 def mdpTest(): 
     "Do PCA on a data set"  
