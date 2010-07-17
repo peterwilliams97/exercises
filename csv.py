@@ -81,7 +81,6 @@ def swapMatrixColumn(matrix, i, j):
    | 19 features from caption terms
    caption*and: 0,1.
      ...
-
 """       
 
 def makeHeader():

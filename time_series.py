@@ -20,7 +20,8 @@ Created on 16/07/2010
 
 @author: peter
 """
-import numpy, scipy, csv, random, time, optparse, run_weka
+from __future__ import division
+import numpy, scipy, csv, random, time, optparse, os, run_weka
 from numpy import *
 
 def processOptions():
@@ -50,21 +51,50 @@ def timeSeriesToMatrixArray(time_series, max_lag):
         max_lag is number of lags in dependence
     """
     num_rows = time_series.shape[1] - max_lag 
+    assert(num_rows >= 1)
     regression_matrix = zeros((num_rows, 2*max_lag + 1))
     for i in range(num_rows):
         regression_matrix[i,0:max_lag] = time_series[0,i:i+max_lag] 
         regression_matrix[i,max_lag:2*max_lag+1] = time_series[1,i:i+max_lag+1] 
     return regression_matrix
 
-def timeSeriesToMatrixCsv(time_series_csv, regression_matrix_csv, max_lag):
+def timeSeriesToMatrixCsv(time_series_data, regression_matrix_csv, max_lag):
     """ Convert a 2 column time series into regression matrix """
-    time_series = transpose(array(csv.readCsvFloat(time_series_csv)))
+    time_series = transpose(array(time_series_data))
     regression_matrix = timeSeriesToMatrixArray(time_series, max_lag)
     header_x = ['x[%0d]' % i for i in range(-max_lag,0)]
     header_y = ['y[%0d]' % i for i in range(-max_lag,1)]
     header = header_x + header_y
     csv.writeCsv(regression_matrix_csv, list(regression_matrix), header)
-  
+
+def runWekaOnTimeSeries(time_series_csv, max_lag, fraction_training):
+    """ Run Weka training a 2 column time series 
+        by converting into a regression with max_lag x and y lags
+        per instance 
+        fraction_training is the fraction of sample used for training
+    """  
+    base_name = os.path.splitext(time_series_csv)[0]
+    regression_matrix_csv = base_name + '.regression.csv'
+    results_filename = base_name + '.results' 
+    model_filename = base_name + '.model' 
+    predictions_filename =  base_name + '.predict'
+    test_filename = base_name + '.test.csv'
+    
+    time_series_data = csv.readCsvFloat(time_series_csv)
+    number_training = int(float(len(time_series_data))*fraction_training)
+    print 'number_training', number_training
+    assert(number_training > max_lag)
+    
+    if False:
+        timeSeriesToMatrixCsv(time_series_data[:number_training], regression_matrix_csv, max_lag)
+        run_weka.runMLPTrain(regression_matrix_csv, results_filename, model_filename, True)
+    
+    for i in range(number_training, len(time_series_data)):
+        timeSeriesToMatrixCsv(time_series_data[i-max_lag:i+1], test_filename, max_lag)
+        run_weka.runMLPPredict(test_filename, model_filename, predictions_filename)
+        parse predictin file
+        time_series_data[i][1] = prediction 
+          
 def test0():
     x = zeros((1))
     print x
@@ -83,11 +113,14 @@ def test0():
 def test1():
     timeSeriesToMatrixCsv(r'\dev\exercises\time_series.csv', r'\dev\exercises\regression_matrix.csv', 40)
 
+
 def showArray(a):
     print 'shape', a.shape
     print a
     print '--------------------'
         
 if __name__ == '__main__':
-    test1()
-    
+    if False:
+        test1()
+    max_lag = 40
+    runWekaOnTimeSeries(r'\dev\exercises\time_series.csv', max_lag, 0.8)
