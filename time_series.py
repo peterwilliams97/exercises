@@ -21,7 +21,7 @@ Created on 16/07/2010
 @author: peter
 """
 from __future__ import division
-import numpy, scipy, csv, random, time, optparse, os, run_weka
+import  copy as CP, numpy, scipy, csv, random, time, optparse, os, run_weka
 from numpy import *
 
 def processOptions():
@@ -79,6 +79,7 @@ def runWekaOnTimeSeries(time_series_csv, max_lag, fraction_training):
     model_filename = base_name + '.model' 
     predictions_filename =  base_name + '.predict'
     test_filename = base_name + '.test.csv'
+    evaluation_filename = base_name + '.evaluation.csv'
     
     time_series_data = csv.readCsvFloat(time_series_csv)
     number_training = int(float(len(time_series_data))*fraction_training)
@@ -89,12 +90,31 @@ def runWekaOnTimeSeries(time_series_csv, max_lag, fraction_training):
         timeSeriesToMatrixCsv(time_series_data[:number_training], regression_matrix_csv, max_lag)
         run_weka.runMLPTrain(regression_matrix_csv, results_filename, model_filename, True)
     
+    prediction_data = CP.deepcopy(time_series_data)
     for i in range(number_training, len(time_series_data)):
-        timeSeriesToMatrixCsv(time_series_data[i-max_lag:i+1], test_filename, max_lag)
+        timeSeriesToMatrixCsv(prediction_data[i-max_lag:i+1], test_filename, max_lag)
         run_weka.runMLPPredict(test_filename, model_filename, predictions_filename)
-        parse predictin file
-        time_series_data[i][1] = prediction 
-          
+        prediction_list = run_weka.getPredictionsRegression(predictions_filename)
+        print 'predictions', prediction_list
+        prediction = prediction_list[0]['predicted']
+        prediction_data[i][1] = prediction 
+        print 'i', i
+        
+        
+    evaluation_data = []
+    for i in range(len(time_series_data)-number_training):
+        row = [0]*5
+        for j in [0,1]:
+            row[j] = time_series_data[number_training+i][j]
+        row[2] = prediction_data[number_training+i][1] 
+        row[3] = math.abs(row[2]-row[1])
+        row[4] = row[3]/row[1] if row[1] else row[3]
+        evaluation_data.append(row)
+     
+    evaluation_header = ['x', 'y_actual', 'y_predicted', 'abs_error', 'normalized_error']
+    
+    csv.writeCsv(evaluation_filename, evaluation_data, evaluation_header)
+    
 def test0():
     x = zeros((1))
     print x
