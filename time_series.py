@@ -98,7 +98,7 @@ def runWekaOnTimeSeries(time_series_csv, max_lag, fraction_training):
             row[j] = time_series_data[number_training+i][j]
         row[2] = prediction_data[number_training+i][1] 
         row[3] = abs(row[2]-row[1])
-        row[4] = row[3]/row[1] if row[1] else row[3]
+        row[4] = row[3]/abs(row[2]+row[1]) if abs(row[2]+row[1]) else row[3]
         evaluation_data.append(row)
      
     evaluation_header = ['x', 'y_actual', 'y_predicted', 'abs_error', 'normalized_error']
@@ -148,8 +148,8 @@ def processCommandLine():
         parser.error("incorrect number of arguments")
     filename = args[0]
     
-    print 'filename:', filename
-    print 'max lag :', options.maxLag,
+    print '         filename:', filename
+    print '          max lag:', options.maxLag
     print 'training fraction:', options.trainingFraction
         
     runWekaOnTimeSeries(filename, options.maxLag, options.trainingFraction)
