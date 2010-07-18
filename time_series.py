@@ -98,16 +98,14 @@ def runWekaOnTimeSeries(time_series_csv, max_lag, fraction_training):
         print 'predictions', prediction_list
         prediction = prediction_list[0]['predicted']
         prediction_data[i][1] = prediction 
-        print 'i', i
-        
-        
+          
     evaluation_data = []
     for i in range(len(time_series_data)-number_training):
         row = [0]*5
         for j in [0,1]:
             row[j] = time_series_data[number_training+i][j]
         row[2] = prediction_data[number_training+i][1] 
-        row[3] = math.abs(row[2]-row[1])
+        row[3] = abs(row[2]-row[1])
         row[4] = row[3]/row[1] if row[1] else row[3]
         evaluation_data.append(row)
      
