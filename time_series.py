@@ -24,14 +24,6 @@ from __future__ import division
 import  copy as CP, numpy, scipy, csv, random, time, optparse, os, run_weka
 from numpy import *
 
-def processOptions():
-    """Process the command line options using 'optparse'"""
-    parser = optparse.OptionParser()
-    parser.add_option('--daysPerSample', type='int', default=7,
-                      help='Number of days to include in each sample')
-    parser.add_option('--sampleUniqueDays', type='int', default=2,
-                      help='Number of non-overlapping days in sample') 
-    return options
 
 def timeSeriesToMatrix(x_series, y_series, max_lag):
     """ Generate Weka format csv file for two time series.
@@ -86,7 +78,7 @@ def runWekaOnTimeSeries(time_series_csv, max_lag, fraction_training):
     print 'number_training', number_training
     assert(number_training > max_lag)
     
-    if False:
+    if True:
         timeSeriesToMatrixCsv(time_series_data[:number_training], regression_matrix_csv, max_lag)
         run_weka.runMLPTrain(regression_matrix_csv, results_filename, model_filename, True)
     
@@ -137,8 +129,35 @@ def showArray(a):
     print a
     print '--------------------'
         
+def processCommandLine():
+    """Process the command line options using 'optparse'"""
+    usage = "usage: %prog [options] arg"
+    parser = optparse.OptionParser(usage)
+    parser.add_option('--daysPerSample', type='int', default=7,
+                      help='Number of days to include in each sample')
+    parser.add_option('--sampleUniqueDays', type='int', default=2,
+                      help='Number of non-overlapping days in sample') 
+    parser.add_option('--maxLag', type='int', default=28,
+                      help='Number of lags to use for each training instance') 
+    parser.add_option('--trainingFraction', type='float', default=0.8,
+                      help='Fraction of data to use for training') 
+    
+    (options, args) = parser.parse_args() 
+    
+    if len(args) != 1:
+        parser.error("incorrect number of arguments")
+    filename = args[0]
+    
+    print 'filename:', filename
+    print 'max lag :', options.maxLag,
+    print 'training fraction:', options.trainingFraction
+        
+    runWekaOnTimeSeries(filename, options.maxLag, options.trainingFraction)
+            
 if __name__ == '__main__':
     if False:
         test1()
-    max_lag = 40
-    runWekaOnTimeSeries(r'\dev\exercises\time_series.csv', max_lag, 0.8)
+    if False:
+        max_lag = 40
+        runWekaOnTimeSeries(r'\dev\exercises\time_series.csv', max_lag, 0.8)
+    processCommandLine()
