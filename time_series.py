@@ -14,7 +14,9 @@ Map inputs to
 Mode
     P[n] = F(P[n-1],...,P[n-k],D[n-1],...,D[n-k]) 
     
+References
     http://techguyinmidtown.com/2009/02/16/pythonic-data-analysis-with-maskedarray-and-timeseries/
+    http://www.dtreg.com/TimeSeries.htm?gclid=CPrboZmH9qICFYgvpAodFxCZjA
 
 Created on 16/07/2010
 
