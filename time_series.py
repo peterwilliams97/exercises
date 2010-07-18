@@ -17,6 +17,7 @@ Mode
 References
     http://techguyinmidtown.com/2009/02/16/pythonic-data-analysis-with-maskedarray-and-timeseries/
     http://www.dtreg.com/TimeSeries.htm?gclid=CPrboZmH9qICFYgvpAodFxCZjA
+    http://faculty.ksu.edu.sa/hisham/Documents/Students/a_PHCL/NLREG.pdf *
 
 Created on 16/07/2010
 
