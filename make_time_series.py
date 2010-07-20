@@ -12,16 +12,13 @@ Created on 18/07/2010
 from __future__ import division
 import  copy as CP, numpy, scipy, csv, random, time, optparse, os
 
-purchase_max_lag = 40
-purchase_lag_fractions = [] 
-        
-def makePurchaseLags():  
-    global purchase_lag_fractions, roulette_wheel
+def makePurchaseLags(purchase_max_lag):  
     purchase_lag_fractions = [purchase_max_lag - i for i in range(purchase_max_lag)]
     total = sum(purchase_lag_fractions)
     purchase_lag_fractions = [x/total for x in purchase_lag_fractions]
     roulette_wheel = [{'days':i, 'weight':purchase_lag_fractions[i]} for i in range(purchase_max_lag)]
     roulette_wheel.sort(key = lambda x: -x['weight'])
+    return roulette_wheel
                 
 def spinRouletteWheel():
     """    Find the roulette wheel winner
@@ -74,7 +71,7 @@ def makeRandomList(number, mean):
     assert(sum(sequence) == number * mean)
     return sequence
            
-def makeTimeSeries(number_days, mean_downloads_per_day, mean_purchases_per_download, mean_other_purchases):     
+def makeTimeSeries(number_days, purchase_max_lag, mean_downloads_per_day, mean_purchases_per_download, mean_other_purchases):     
     downloads = makeRandomList(number_days, mean_downloads_per_day)
     purchases = makeRandomList(number_days, mean_other_purchases)
     makePurchaseLags()
@@ -82,11 +79,15 @@ def makeTimeSeries(number_days, mean_downloads_per_day, mean_purchases_per_downl
         purchases_per_day = int(round(downloads[day]*mean_purchases_per_download))
         for j in range(purchases_per_day):
             purchase_day = day + spinRouletteWheel()
-            day_of_week = purchase_day % 7
-            if day_of_week <= 2:
-                purchase_day = purchase_day + 2-day_of_week
             if purchase_day < len(purchases):
                 purchases[purchase_day] = purchases[purchase_day] + 1
+    for day in range(number_days):
+        day_of_week = day % 7
+        if day_of_week < 2:
+            purchase_day = day + 2
+            if purchase_day < len(purchases):
+                purchases[purchase_day] = purchases[purchase_day] + purchases[day]
+                purchases[day] = 0
     return (downloads, purchases)
             
 def makeTimeSeriesCsv(filename, number_days, mean_downloads_per_day, mean_purchases_per_download, mean_other_purchases):
@@ -119,7 +120,7 @@ def processCommandLine():
     print 'purchasesPerDownload:', options.purchasesPerDownload
     print 'otherPurchasesPerDay:', options.otherPurchasesPerDay
         
-    makeTimeSeriesCsv(filename, options.numberDays, options.downloadsPerDay, options.purchasesPerDownload, options.otherPurchasesPerDay)
+    makeTimeSeriesCsv(filename, 40, options.numberDays, options.downloadsPerDay, options.purchasesPerDownload, options.otherPurchasesPerDay)
             
 if __name__ == '__main__':
     if False:
