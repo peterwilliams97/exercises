@@ -19,8 +19,10 @@ def makePurchaseLags(purchase_max_lag):
     roulette_wheel = [{'days':i, 'weight':purchase_lag_fractions[i]} for i in range(purchase_max_lag)]
     roulette_wheel.sort(key = lambda x: -x['weight'])
     return roulette_wheel
+
+random.seed(1)
                 
-def spinRouletteWheel():
+def spinRouletteWheel(roulette_wheel):
     """    Find the roulette wheel winner
         roulette is a list of 2-tuples
             1st val is index
@@ -49,36 +51,44 @@ def spinRouletteWheel():
     exit()
  
 def randomPositiveIntegerVariate(mean): 
+    stddev = mean
+    r = int(round(random.normalvariate(mean, stddev)))
+    if r >= mean:
+        return r
     while True:
-        r = int(round(random.normalvariate(mean, mean)))
-        if r >= 0:
+        r = int(round(random.normalvariate(mean, stddev)))
+        if r >= 0 and r <= mean:
             return r
+        if stddev >= 2.0:
+            stddev = stddev/2.0
             
 def makeRandomList(number, mean): 
     sequence = [randomPositiveIntegerVariate(mean) for i in range(number)]
    
     excess = sum(sequence) - number * mean
-    print 'number', number
-    print 'mean', mean
-    print 'excess', excess
+    print 'number', number,
+    print 'mean', mean,
+    print 'excess', excess,
     delta = 1 if excess >= 0 else -1
     i = 0
-    while excess != 0:
-        if sequence[i] - delta > 0:
+    while abs(excess) > 1.0:
+        if sequence[i] - delta >= 0:
             sequence[i] = sequence[i] - delta
             excess = excess - delta
         i = (i+1) % number
-    assert(sum(sequence) == number * mean)
+        #print excess, 
+    assert(abs(sum(sequence) - number * mean) <= 1.0)
+    print '*', 
     return sequence
            
-def makeTimeSeries(number_days, purchase_max_lag, mean_downloads_per_day, mean_purchases_per_download, mean_other_purchases):     
+def makeTimeSeries(purchase_max_lag, number_days, mean_downloads_per_day, mean_purchases_per_download, mean_other_purchases):     
     downloads = makeRandomList(number_days, mean_downloads_per_day)
     purchases = makeRandomList(number_days, mean_other_purchases)
-    makePurchaseLags()
+    roulette_wheel = makePurchaseLags(purchase_max_lag)
     for day in range(number_days):
         purchases_per_day = int(round(downloads[day]*mean_purchases_per_download))
         for j in range(purchases_per_day):
-            purchase_day = day + spinRouletteWheel()
+            purchase_day = day + spinRouletteWheel(roulette_wheel)
             if purchase_day < len(purchases):
                 purchases[purchase_day] = purchases[purchase_day] + 1
     for day in range(number_days):
@@ -89,11 +99,11 @@ def makeTimeSeries(number_days, purchase_max_lag, mean_downloads_per_day, mean_p
                 purchases[purchase_day] = purchases[purchase_day] + purchases[day]
                 purchases[day] = 0
     return (downloads, purchases)
-            
-def makeTimeSeriesCsv(filename, number_days, mean_downloads_per_day, mean_purchases_per_download, mean_other_purchases):
-    (downloads, purchases) = makeTimeSeries(number_days, mean_downloads_per_day, mean_purchases_per_download, mean_other_purchases) 
+                   
+def makeTimeSeriesCsv(filename, purchase_max_lag, number_days, mean_downloads_per_day, mean_purchases_per_download, mean_other_purchases):
+    (downloads, purchases) = makeTimeSeries(purchase_max_lag, number_days, mean_downloads_per_day, mean_purchases_per_download, mean_other_purchases) 
     data = zip(downloads, purchases)
-    csv.writeCsv(filename, data)           
+    csv.writeCsv(filename, data, ['downloads', 'purchases'])           
     
 def processCommandLine():
     """Process the command line options using 'optparse'"""
