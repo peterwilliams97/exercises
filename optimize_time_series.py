@@ -38,7 +38,7 @@ def makeTestFiles(create_files):
     return test_file_names
                 
 if __name__ == '__main__':
-    create_files = False
+    create_files = True
     test_file_names = makeTestFiles(create_files)
     print len(test_file_names), 'test files'
     max_lag = 30
