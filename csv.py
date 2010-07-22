@@ -32,11 +32,22 @@ def readCsvRaw(filename):
     validateMatrix(entries)
     return entries
 
+def readCsvFloat2(filename, has_header): 
+    "Reads a CSV file into a header and 2d array of float"
+    header = None
+    entries = readCsvRaw(filename)
+    if has_header:
+        header = entries[0]
+        matrix = [[float(e) for e in row] for row in entries[1:]]
+        print 'readCsvFloat:', filename, len(entries[1:]), len(entries[1])
+    else:
+        matrix = [[float(e) for e in row] for row in entries]
+    return (matrix, header)    
+
 def readCsvFloat(filename): 
     "Reads a CSV file into a 2d array of float"
-    entries = readCsvRaw(filename)
-    matrix = [[float(e) for e in row] for row in entries]
-    return matrix    
+    matrix, header = readCsvFloat2(filename, False)
+    return matrix
 
 def writeCsv(filename, in_matrix, header = None):
     "Writes a 2d array to a CSV file"

@@ -50,21 +50,46 @@ def spinRouletteWheel(roulette_wheel):
     print base
     exit()
  
-def randomPositiveIntegerVariate(mean): 
-    stddev = mean
-    r = int(round(random.normalvariate(mean, stddev)))
-    if r >= mean:
-        return r
-    while True:
-        r = int(round(random.normalvariate(mean, stddev)))
-        if r >= 0 and r <= mean:
-            return r
-        if stddev >= 2.0:
-            stddev = stddev/2.0
+def randomPositiveIntegerVariate(target_mean, current_mean): 
+    
+    if current_mean < target_mean:
+        r = int(round(random.normalvariate(target_mean, target_mean)))
+      #  print '>', r,
+        if r >= target_mean:
             
+            return r
+    while True:
+        r = int(round(random.normalvariate(target_mean, target_mean/2.0)))
+        #print '<', r,
+        if  target_mean/10.0 <= r and r <= target_mean:
+            
+            return r
+                     
+def randomPositiveIntegerVariate__yyy(mode):
+    low = mode *0.1
+    high = mode * 3
+    return random.triangular(low, high, mode)
+
+def getMean(sequence):
+    n = len(sequence)
+    return sum(sequence)/n if n > 0 else 0
+
 def makeRandomList(number, mean): 
-    sequence = [randomPositiveIntegerVariate(mean) for i in range(number)]
-   
+    print 'makeRandomList(%3d,%4d)' % (number, int(mean)),
+    assert(number >= 10)
+    assert(mean >= 10)
+    sequence = []
+    for i in range(number):
+        r = randomPositiveIntegerVariate(mean, getMean(sequence))
+        #print r,
+        sequence.append(r)
+       # print int(getMean(sequence)-mean),
+    #print sequence
+    #exit()
+    
+        
+    random.shuffle(sequence)
+    
     excess = sum(sequence) - number * mean
     print 'number', number,
     print 'mean', mean,
@@ -76,9 +101,9 @@ def makeRandomList(number, mean):
             sequence[i] = sequence[i] - delta
             excess = excess - delta
         i = (i+1) % number
-        #print excess, 
+        # print i,excess, '--',
     assert(abs(sum(sequence) - number * mean) <= 1.0)
-    print '*', 
+    print '*'
     return sequence
            
 def makeTimeSeries(purchase_max_lag, number_days, mean_downloads_per_day, mean_purchases_per_download, mean_other_purchases):     
@@ -94,10 +119,12 @@ def makeTimeSeries(purchase_max_lag, number_days, mean_downloads_per_day, mean_p
     for day in range(number_days):
         day_of_week = day % 7
         if day_of_week < 2:
-            purchase_day = day + 2
-            if purchase_day < len(purchases):
-                purchases[purchase_day] = purchases[purchase_day] + purchases[day]
-                purchases[day] = 0
+            n = int(purchases[day]*0.8)
+            for i in range(n):
+                purchase_day = day + random.randint(1, 5)
+                if purchase_day < len(purchases):
+                    purchases[purchase_day] = purchases[purchase_day] + 1
+                    purchases[day] = purchases[day] - 1
     return (downloads, purchases)
                    
 def makeTimeSeriesCsv(filename, purchase_max_lag, number_days, mean_downloads_per_day, mean_purchases_per_download, mean_other_purchases):

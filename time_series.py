@@ -76,9 +76,9 @@ def runWekaOnTimeSeries(time_series_csv, max_lag, fraction_training):
     test_filename = base_name + '.test.csv'
     evaluation_filename = base_name + '.evaluation.csv'
     
-    time_series_data = csv.readCsvFloat(time_series_csv)
+    time_series_data, _ = csv.readCsvFloat2(time_series_csv, True)
     number_training = int(float(len(time_series_data))*fraction_training)
-    print 'number_training', number_training
+    print 'number_training', number_training, 'fraction_training', fraction_training,'len(time_series_data)',len(time_series_data)
     assert(number_training > max_lag)
     
     if True:
