@@ -10,7 +10,7 @@ Created on 18/07/2010
 @author: peter
 """
 from __future__ import division
-import  copy as CP, numpy, scipy, csv, random, time, optparse, os
+import copy as CP, numpy, scipy, random, time, optparse, os, csv, time_series
 
 def makePurchaseLags(purchase_max_lag):  
     purchase_lag_fractions = [purchase_max_lag - i for i in range(purchase_max_lag)]
@@ -70,17 +70,13 @@ def randomPositiveIntegerVariate__yyy(mode):
     high = mode * 3
     return random.triangular(low, high, mode)
 
-def getMean(sequence):
-    n = len(sequence)
-    return sum(sequence)/n if n > 0 else 0
-
 def makeRandomList(number, mean): 
     print 'makeRandomList(%3d,%4d)' % (number, int(mean)),
     assert(number >= 10)
     assert(mean >= 10)
     sequence = []
     for i in range(number):
-        r = randomPositiveIntegerVariate(mean, getMean(sequence))
+        r = randomPositiveIntegerVariate(mean, time_series.getMean(sequence))
         #print r,
         sequence.append(r)
        # print int(getMean(sequence)-mean),

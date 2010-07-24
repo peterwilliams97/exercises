@@ -19,11 +19,13 @@ def makeTestFiles(create_files):
     test_file_names = []
     file_number = 0
     params_list = []
-    for purchases_per_download_pc in range(20, 81, 20):
-        for other_purchase_ratio_pc in range(20, 201, 50):
-            for purchase_max_lag in range(5, 26, 5):
+    
+    for other_purchase_ratio_pc in (10,20,50,100,200):
+        for purchases_per_download_pc in (80, 40, 20):
+            for purchase_max_lag in (2,4,7,14,28):
                 params_list.append((purchases_per_download_pc,other_purchase_ratio_pc,purchase_max_lag))
-     
+    
+   # params_list = [(80,20,5)] 
     print len(params_list), 'test files'    
         
     for purchases_per_download_pc,other_purchase_ratio_pc,purchase_max_lag in params_list:
@@ -41,7 +43,11 @@ if __name__ == '__main__':
     create_files = True
     test_file_names = makeTestFiles(create_files)
     print len(test_file_names), 'test files'
-    max_lag = 30
+    max_lag = 40
     fraction_training = 0.8
     for filename in test_file_names:
-        time_series.runWekaOnTimeSeries(makeTestPath(filename), max_lag, fraction_training)
+        if False:
+            time_series.findAutoCorrelations(makeTestPath(filename), max_lag, fraction_training)
+        if True:
+            time_series.runWekaOnTimeSeries(makeTestPath(filename), max_lag, fraction_training)
+            exit()
