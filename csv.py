@@ -5,19 +5,22 @@ Clean advertisement detection trainging set file
 Peter
 16/05/2010
 """
-import copy,os,time
+import copy,os,time,sys
 from math import *
 from operator import itemgetter
 
 def validateMatrix(matrix):
-    "Check that all rows in matrix and same length"
-    assert(len(matrix) > 0)
-    assert(len(matrix[0]) > 0)
-    for i in range(1, len(matrix)):
+	"""Check that all rows in matrix and same length"""
+	assert(len(matrix) > 0)
+	assert(len(matrix[0]) > 0)
+	print 'len(matrix[0]) =', len(matrix[0])
+	for i in range(1, len(matrix)):
+		if not len(matrix[i]) == len(matrix[0]):
+			print 'len row %3d = %3d' % (i, len(matrix[i]))
         assert(len(matrix[i]) == len(matrix[0]))
         
 def validateMatrix2(matrix):
-    "Check that all rows in matrix and same length and non-empty"
+    """Check that all rows in matrix and same length and non-empty"""
     validateMatrix(matrix)
     for i,row in enumerate(matrix):
         for j,val in enumerate(row):
@@ -25,12 +28,18 @@ def validateMatrix2(matrix):
                 print 'empty cell', i, j        
   
 def readCsvRaw(filename): 
-    "Reads a CSV file into a 2d array"
-    lines = file(filename).read().strip().split('\n')
-    entries = [[e for e in l.strip().split(',')] for l in lines]
-    print 'readCsvRaw:', filename, len(entries), len(entries[0])
-    validateMatrix(entries)
-    return entries
+	"""Reads a CSV file into a 2d array"""
+	lines = file(filename).read().strip().split('\n')
+	if False:
+		for l in lines:
+			print l
+			ee = [e for e in l.strip().split(',')] 
+			print len(ee), ee
+		exit()
+	entries = [[e for e in l.strip().split(',')] for l in lines]
+	print 'readCsvRaw:', filename, len(entries), len(entries[0])
+	validateMatrix(entries)
+	return entries
 
 def readCsvFloat2(filename, has_header): 
     "Reads a CSV file into a header and 2d array of float"
@@ -209,7 +218,7 @@ def makeTempPath(base_name):
     return os.path.join(data_dir, 'temp', base_name + ('%06d' % count))      
      
 def prepareData():
-    "Prepare data by adding a header row and replacing missing values"
+    """Prepare data by adding a header row and replacing missing values"""
     header = makeHeader()
     data = readCsvRaw(raw_name)
     
@@ -226,5 +235,7 @@ def prepareData():
     
     
 if __name__ == '__main__':
-    prepareData()    
+    #prepareData() 
+	filename = sys.argv[1]
+	readCsvRaw(filename)
    
