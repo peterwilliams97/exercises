@@ -13,9 +13,10 @@ def validateMatrix(matrix):
 	"""Check that all rows in matrix and same length"""
 	assert(len(matrix) > 0)
 	assert(len(matrix[0]) > 0)
-	print 'len(matrix[0]) =', len(matrix[0])
+	
 	for i in range(1, len(matrix)):
 		if not len(matrix[i]) == len(matrix[0]):
+			print 'len(matrix[0]) =', len(matrix[0])
 			print 'len row %3d = %3d' % (i, len(matrix[i]))
         assert(len(matrix[i]) == len(matrix[0]))
         
