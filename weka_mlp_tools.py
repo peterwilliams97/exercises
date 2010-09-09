@@ -209,7 +209,7 @@ def makeWekaOptions(learning_rate, momentum, number_hidden, num_cv, costs = None
 	return mapToWekaOptions(options_map)
 	
 def makeRankings(roulette):
-	"Rankings for use in roulette"
+	""" Rankings for use in roulette """
 	ranks = copy.deepcopy(roulette)
 	ranks.sort(key = lambda x: -x['val'])
 	ratio = 0.5
