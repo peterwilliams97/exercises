@@ -16,11 +16,11 @@ import math, os, random, csv
 def getAttrs(instance):
 	return instance[1:]
 	return [int(x) for x in instance[1:]]
-	
+
 def extractAttrs(data):
 	return [getAttrs(instance) for instance in data] 
 
-def numberDuplicates(data):	
+def numberDuplicates(data):
 	data.sort()
 	duplicates = 0
 	for i in range(1, len(data)):
@@ -30,7 +30,7 @@ def numberDuplicates(data):
 	print
 	return duplicates
 
-def removeDuplicates(data):	
+def removeDuplicates(data):
 	data.sort()
 	out = []
 	out.append(data[0])
@@ -44,17 +44,35 @@ def appendDescription(dir, file_name, description):
 	base, ext = os.path.splitext(path)
 	return base + '.' + description + ext
 
+def buildPath(dir, file_name, ext):
+	path = os.path.join(dir, file_name)
+	base, _ = os.path.splitext(path)
+	return base + ext
+
+def clean(key):
+	return key.strip().replace('%','').replace(' ', '-')
+
 def parseAttrLine(line):
 	"""  1. date:		april,may,june,july,august,september,october,?. """
 	pre, post = line.strip().split(':')
 	number, attr = pre.strip().split('.')
-	vals = [x.strip() for x in post.strip().split(',')]
-	return {'num':int(number), 'attr':attr.strip(), 'vals':vals}
+	attr = attr.strip().replace('%','').replace(' ', '-')
+	vals = [clean(x) for x in post.strip().strip('.').split(',')]
+	return {'num':int(number), 'attr':clean(attr), 'vals':vals}
 
-def parseAttrs(filename):
-	lines = file(filename).read().strip().split('\n')
+def parseAttrs(file_name):
+	lines = file(file_name).read().strip().split('\n')
 	lines = [x.strip() for x in lines if len(x.strip()) > 0]
 	return [parseAttrLine(x) for x in lines]
+
+def parseClasses(file_name):
+	lines = file(file_name).read().strip().split('\n')
+	lines = [x.strip() for x in lines if len(x.strip()) > 0]
+	classes = []
+	for l in lines:
+		print l
+		classes = classes + [clean(x) for x in l.split(',')]
+	return classes
 
 def applyAttrs(data, attrs):
 	assert(len(data[0]) == len(attrs) + 1)
@@ -69,8 +87,17 @@ def applyAttrs(data, attrs):
 
 	return (header, out)
 
-def writeArff(data, attrs, name):
+def writeArff(file_name, relation, classes, attrs, data):
 	""" Write a Weka .arff file """
+	print 'writeArff:', file_name
+	f = file(file_name, 'w')
+	f.write('@RELATION ' + relation + '\n\n')
+	f.write('@ATTRIBUTE %-15s {%s}\n' % ('class', ','.join([x for x in classes if not x == '?'])))
+	for a in attrs:
+		f.write('@ATTRIBUTE %-15s {%s}\n' % (a['attr'], ','.join([x for x in a['vals'] if not x == '?'])))
+	f.write('\n@DATA\n\n')
+	for instance in data:
+		f.write(', '.join(instance) + '\n')
 
 def getRandomData(data):
 	""" Simulate the population in data with random data with 
@@ -116,13 +143,14 @@ def preprocessSoybeanData():
 	training_file = 'soybean-large.data.csv'
 	test_file = 'soybean-large.test.csv'
 	combined_file = 'soybean-combined.csv'
+	classes_file = 'soybean.classes'
 	attrs_file = 'soybean.attributes'
 	random_file = 'soybean-random.csv'
-	
+
 	training_data = csv.readCsvRaw(os.path.join(dir, training_file))
 	test_data = csv.readCsvRaw(os.path.join(dir, test_file))
 	combined_data = test_data + training_data
-	
+
 	random_data = getRandomData(combined_data)
 
 	training_duplicates = numberDuplicates(training_data)
@@ -150,8 +178,10 @@ def preprocessSoybeanData():
 	csv.writeCsv(appendDescription(dir, test_file, 'out'), out_test_data)
 	csv.writeCsv(appendDescription(dir, combined_file, 'out'), out_combined_data)
 
+	classes = parseClasses(os.path.join(dir, classes_file))
+	print 'classes', classes
 	attrs = parseAttrs(os.path.join(dir, attrs_file))
-	
+
 	header, named_training_data = applyAttrs(out_training_data, attrs)
 	csv.writeCsv(appendDescription(dir, training_file, 'named'), named_training_data, header)
 	header, named_test_data = applyAttrs(out_test_data, attrs)
@@ -159,7 +189,10 @@ def preprocessSoybeanData():
 	header, named_combined_data = applyAttrs(out_combined_data, attrs)
 	csv.writeCsv(appendDescription(dir, combined_file, 'named'), named_combined_data, header)
 
-	
+	writeArff(buildPath(dir, training_file, '.arff'), 'soybean', classes, attrs, named_training_data)
+	writeArff(buildPath(dir, test_file, '.arff'), 'soybean', classes, attrs, named_test_data)
+	writeArff(buildPath(dir, combined_file, '.arff'), 'soybean', classes, attrs, named_combined_data)
+
 if __name__ == '__main__':
 	preprocessSoybeanData()
 	
