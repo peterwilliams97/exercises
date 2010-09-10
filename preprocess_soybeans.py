@@ -13,14 +13,13 @@ http://archive.ics.uci.edu/ml/machine-learning-databases/soybean/
 from __future__ import division
 import math, os, random, csv
 
-def getAttrs(instance):
-	return instance[1:]
-	return [int(x) for x in instance[1:]]
-
 def extractAttrs(data):
-	return [getAttrs(instance) for instance in data] 
+	""" Extract attributes from a raw data set which as class in the 
+	    in the first column """
+	return [instance[1:] for instance in data] 
 
 def numberDuplicates(data):
+	""" Return the number of duplicate instances in a data matrix """
 	data.sort()
 	duplicates = 0
 	for i in range(1, len(data)):
@@ -31,6 +30,7 @@ def numberDuplicates(data):
 	return duplicates
 
 def removeDuplicates(data):
+	""" Return data with duplicate instances removed """
 	data.sort()
 	out = []
 	out.append(data[0])
@@ -40,20 +40,25 @@ def removeDuplicates(data):
 	return out
 
 def appendDescription(dir, file_name, description):
+	""" Append a description to file path made up of dir and file_name """
 	path = os.path.join(dir, file_name)
 	base, ext = os.path.splitext(path)
 	return base + '.' + description + ext
 
 def buildPath(dir, file_name, ext):
+	""" Build a path from a dir file_name and ext """
 	path = os.path.join(dir, file_name)
 	base, _ = os.path.splitext(path)
 	return base + ext
 
 def clean(key):
+	""" Return key with characters not allowed in .arff files removed """
 	return key.strip().replace('%','').replace(' ', '-')
 
 def parseAttrLine(line):
-	"""  1. date:		april,may,june,july,august,september,october,?. """
+	""" Parse a line from an attributes file
+		Each line looks like:
+	 		1. date:		april,may,june,july,august,september,october,?. """
 	pre, post = line.strip().split(':')
 	number, attr = pre.strip().split('.')
 	attr = attr.strip().replace('%','').replace(' ', '-')
@@ -61,20 +66,24 @@ def parseAttrLine(line):
 	return {'num':int(number), 'attr':clean(attr), 'vals':vals}
 
 def parseAttrs(file_name):
+	""" Parse an attributes file """
 	lines = file(file_name).read().strip().split('\n')
 	lines = [x.strip() for x in lines if len(x.strip()) > 0]
 	return [parseAttrLine(x) for x in lines]
 
 def parseClasses(file_name):
+	""" Parse a classes file """
 	lines = file(file_name).read().strip().split('\n')
 	lines = [x.strip() for x in lines if len(x.strip()) > 0]
 	classes = []
 	for l in lines:
-		print l
 		classes = classes + [clean(x) for x in l.split(',')]
 	return classes
 
 def applyAttrs(data, attrs):
+	""" Add attribute names to a data file of enumerated values 
+		Returns named attributes and a header line
+	"""
 	assert(len(data[0]) == len(attrs) + 1)
 	num_attrs = len(attrs)
 	num_instances = len(data)
