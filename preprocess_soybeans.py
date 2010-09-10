@@ -24,9 +24,9 @@ def numberDuplicates(data):
 	duplicates = 0
 	for i in range(1, len(data)):
 		if data[i] == data[i-1]:
-			print '(%d,%d),' % (i,i+1),
+			#print '(%d,%d),' % (i,i+1),
 			duplicates = duplicates + 1
-	print
+	#print
 	return duplicates
 
 def removeDuplicates(data):
@@ -188,7 +188,6 @@ def preprocessSoybeanData():
 	csv.writeCsv(appendDescription(dir, combined_file, 'out'), out_combined_data)
 
 	classes = parseClasses(os.path.join(dir, classes_file))
-	print 'classes', classes
 	attrs = parseAttrs(os.path.join(dir, attrs_file))
 
 	header, named_training_data = applyAttrs(out_training_data, attrs)
