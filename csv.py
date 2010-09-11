@@ -27,21 +27,38 @@ def validateMatrix2(matrix):
         for j,val in enumerate(row):
             if len(val) == 0:
                 print 'empty cell', i, j        
-  
-def readCsvRaw(filename): 
-	"""Reads a CSV file into a 2d array"""
+
+def anyNotBlank(row):
+	notBlank = False
+	for e in row:
+		if len(e) > 0:
+			return True
+	return False
+
+def readCsvRaw(filename, remove_blank_lines = False): 
+	""" Read a CSV file into a 2d array """
 	lines = file(filename).read().strip().split('\n')
-	if False:
-		for l in lines:
-			print l
-			ee = [e for e in l.strip().split(',')] 
-			print len(ee), ee
-		exit()
+	lines = [l.strip() for l in lines]
+	if remove_blank_lines:
+		lines = [l for l in lines if len(l) > 0]
 	entries = [[e for e in l.strip().split(',')] for l in lines]
+	if remove_blank_lines:
+		entries = [row for row in entries if anyNotBlank(row)]
 	print 'readCsvRaw:', filename, len(entries), len(entries[0])
 	validateMatrix(entries)
 	return entries
 
+def readCsvRaw2(filename, has_header): 
+    """ Read a CSV file into a header and 2d array """
+    header = None
+    entries = readCsvRaw(filename, True)
+    if has_header:
+        header = entries[0]
+        matrix = entries[1:]
+    else:
+        matrix = entries
+    return (matrix, header)
+   
 def readCsvFloat2(filename, has_header): 
     "Reads a CSV file into a header and 2d array of float"
     header = None
