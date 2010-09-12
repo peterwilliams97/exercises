@@ -13,9 +13,6 @@ http://archive.ics.uci.edu/ml/machine-learning-databases/soybean/
 6. Convert to .arff format
 	Originals ('orig'), combined ('combined') and with duplicates removed
 
-"""
-
-""" 
 The downloaded data is stored in the following directory in the following files
 Update these file names to match their locations on your computer 
 """ 
@@ -27,7 +24,7 @@ classes_file = 'soybean.classes'
 attrs_file = 'soybean.attributes'
 random_file = 'soybean-random.csv'
 
-import math, os, sys, random, datetime, csv
+import math, os, sys, random, datetime, shutil, csv
 
 def extractAttrs(data):
 	""" Extract attributes from a raw data set which as class in the 
@@ -140,6 +137,8 @@ def writeArff(file_name, relation, classes, attrs, data):
 	print 'writeArff:', file_name, len(data), len(data[0])
 	f = file(file_name, 'w')
 	f.write('%\n')
+	f.write('%% %s \n' % os.path.basename(file_name))
+	f.write('%\n')
 	f.write('% Created by ' + os.path.basename(sys.argv[0]) + ' on ' + datetime.date.today().strftime("%A, %d %B %Y") + '\n')
 	f.write('% Constructed from raw data in http://archive.ics.uci.edu/ml/machine-learning-databases/soybean/\n')
 	f.write('%% %d instances\n' % len(data))
@@ -152,6 +151,11 @@ def writeArff(file_name, relation, classes, attrs, data):
 	f.write('\n@DATA\n\n')
 	for instance in data:
 		f.write(', '.join(instance) + '\n')
+	f.close()
+
+	""" Copy .arff files to .arff.txt so they can be viewed from Google docs """
+	print 'writeArff:', file_name + '.txt', '-- duplicate'
+	shutil.copyfile(file_name, file_name + '.txt')
 
 def getRandomData(data):
 	""" Simulate the population in data with random data with 

@@ -47,23 +47,10 @@ def getGradeCounts():
 		print '%5d, %6d,' % (i, grades_columns[i]), header[grades_columns[i]]
 
 	possible_grades = ('HD','D','C','P','N')
-	
-	if False:
-		""" Find all possible values of grades in all subjects """
-		grades_vals = [[]] * num_grades
-		for instance in data:
-			for i in range(num_grades):
-				col = grades_columns[i]
-				v = instance[col]
-				vals = grades_vals[i]
-				if not v in vals:
-					vals.append(v)
-	else:
-		grades_vals = [possible_grades] * num_grades
-
 	print 'grades -----------------------------------'
+	
 	for i in range(num_grades):
-		print '%-10s' % header[grades_columns[i]], grades_vals[i]
+		print '%-10s' % header[grades_columns[i]], possible_grades
 
 	""" counts = categories : subjects : grades 
 		First create all the counters """
@@ -71,9 +58,8 @@ def getGradeCounts():
 	for cat in categories:
 		counts[cat] = []
 		for i in range(num_grades):
-			vals = grades_vals[i]
 			c = {}
-			for v in vals:
+			for v in possible_grades:
 				c[v] = 0
 			counts[cat].append(c)
 
@@ -86,19 +72,12 @@ def getGradeCounts():
 			cnt[i][v] = cnt[i][v] + 1
 
 	""" Calculate totals """
-	total_keys = possible_grades
-	if False:
-		for i in range(num_grades):
-			for k in cnt[i].keys():
-				if not k in total_keys:
-					total_keys.append(k)
-
 	totals = {}
 
 	for cat in categories:
 		totals[cat] = {}
 		for i in range(num_grades):
-			for v in grades_vals[i]:
+			for v in possible_grades:
 				if not v in totals[cat].keys():
 					totals[cat][v] = 0
 		cnt = counts[cat]
@@ -110,34 +89,33 @@ def getGradeCounts():
 
 	header.append('total')
 	grades_columns.append(len(header)-1)
-	grades_vals.append(total_keys)
 	num_grades = num_grades + 1 
 	print header
 
 	""" Display the data as a .csv """
-	count_header = ['category']
+	count_header = ['subject']
 	for i in range(num_grades):
 		count_header.append(header[grades_columns[i]])
-		for j in range(len(grades_vals[i])-1):
-			count_header.append("")
-
-	count_header2 = ['category']
+		for j in range(len(possible_grades)):
+			count_header.append('')
+	
+	count_header2 = ['grade']
 	for i in range(num_grades):
-		for k in grades_vals[i]:
+		count_header2.append('')
+		for k in possible_grades:
 			count_header2.append(k)
 
 	count_data = [count_header, count_header2]
 	for cat in sorted(counts.keys()):
-		row = [cat]
+		row = ['']
 		for i in range(num_grades):
-			for k in grades_vals[i]:
+			row.append('cat_%s' % cat)
+			for k in possible_grades:
 				row.append(counts[cat][i][k])
 		count_data.append(row)
 
 	csv.writeCsv(os.path.join(dir,counts_file), transpose(count_data))	
 
 if __name__ == '__main__':
-	print getGradeCounts.__doc__
 	getGradeCounts()
-	
 	
