@@ -10,10 +10,7 @@ def transpose(data):
 	w = len(data[0])
 	for instance in data:
 		assert(len(instance) == w)
-	out = [[]] * w
-	for i in range(w):
-		out[i] = [instance[i] for instance in data]
-	return out
+	return [[instance[i] for instance in data] for i in range(w)]
 	
 def getGradeCounts():
 	""" Read the data file
@@ -21,53 +18,38 @@ def getGradeCounts():
 	data,header = csv.readCsvRaw2(os.path.join(dir, data_file), True)
 
 	""" Category is in column 1 """
-	categories = []
-	for instance in data:
-		cat = instance[1]
-		if not cat in categories:
-			if len(cat) == 0:
-				print instance
-			assert(len(cat) > 0)
-			categories.append(cat)
+	categories = set([instance[1] for instance in data])
 
 	print 'categories -------------------------------'
-	for cat in categories:
+	for cat in sorted(categories):
 		print cat
 
 	""" Grades end in _g """
-	grades_columns = []
-	for i, h in enumerate(header):
-		if '_g' in h:
-			grades_columns.append(i)
-
-	num_grades = len(grades_columns)
+	subject_grades_columns = [i for i, h in enumerate(header) if '_g' in h]
+	num_subjects = len(subject_grades_columns)
 
 	print 'grades columns names ---------------------'
-	for i in range(num_grades):
-		print '%5d, %6d,' % (i, grades_columns[i]), header[grades_columns[i]]
+	for i in range(num_subjects):
+		print '%5d, %6d,' % (i, subject_grades_columns[i]), header[subject_grades_columns[i]]
 
-	possible_grades = ('HD','D','C','P','N')
+	possible_grades = frozenset(['HD','D','C','P','N'])
 	print 'grades -----------------------------------'
 	
-	for i in range(num_grades):
-		print '%-10s' % header[grades_columns[i]], possible_grades
+	for i in range(num_subjects):
+		print '%-10s' % header[subject_grades_columns[i]], possible_grades
 
-	""" counts = categories : subjects : grades 
-		First create all the counters """
+	""" counts = categories : subjects : grades """
+	"""	First create all the counters """
 	counts = {} 
 	for cat in categories:
-		counts[cat] = []
-		for i in range(num_grades):
-			c = {}
-			for v in possible_grades:
-				c[v] = 0
-			counts[cat].append(c)
+		counts[cat] = [{}.fromkeys(possible_grades, 0) for i in range(num_subjects)] 
 
+	""" Count all the category:subject:grade bins """
 	for instance in data:
 		cat = instance[1]
 		cnt = counts[cat]
-		for i in range(num_grades):
-			col = grades_columns[i]
+		for i in range(num_subjects):
+			col = subject_grades_columns[i]
 			v = instance[col]
 			cnt[i][v] = cnt[i][v] + 1
 
@@ -76,31 +58,27 @@ def getGradeCounts():
 
 	for cat in categories:
 		totals[cat] = {}
-		for i in range(num_grades):
-			for v in possible_grades:
-				if not v in totals[cat].keys():
-					totals[cat][v] = 0
 		cnt = counts[cat]
-		for i in range(num_grades):
+		for i in range(num_subjects):
 			for k in cnt[i].keys():
-				totals[cat][k] = totals[cat][k] + cnt[i][k]
+				totals[cat][k] = totals[cat].get(k,0) + cnt[i][k]
 		print 'totals[%s]' % cat, totals[cat]
 		counts[cat] = cnt + [totals[cat]]
 
 	header.append('total')
-	grades_columns.append(len(header)-1)
-	num_grades = num_grades + 1 
+	subject_grades_columns.append(len(header)-1)
+	num_subjects = num_subjects + 1 
 	print header
 
 	""" Display the data as a .csv """
 	count_header = ['subject']
-	for i in range(num_grades):
-		count_header.append(header[grades_columns[i]])
+	for i in range(num_subjects):
+		count_header.append(header[subject_grades_columns[i]])
 		for j in range(len(possible_grades)):
 			count_header.append('')
-	
+
 	count_header2 = ['grade']
-	for i in range(num_grades):
+	for i in range(num_subjects):
 		count_header2.append('')
 		for k in possible_grades:
 			count_header2.append(k)
@@ -108,7 +86,7 @@ def getGradeCounts():
 	count_data = [count_header, count_header2]
 	for cat in sorted(counts.keys()):
 		row = ['']
-		for i in range(num_grades):
+		for i in range(num_subjects):
 			row.append('cat_%s' % cat)
 			for k in possible_grades:
 				row.append(counts[cat][i][k])

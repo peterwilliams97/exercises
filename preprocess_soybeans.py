@@ -54,8 +54,7 @@ def markDuplicates(in_data):
 	return marked
 
 def removeDuplicates(data, duplicates, remove_all):
-	""" Return instances in duplicates from data 
-		If remove_all then remove all instances
+	""" Return instances in duplicates from data. If remove_all then remove all instances
 		else remove all but first instance """
 	matches = [{'instance':instance, 'number':0} for instance in duplicates]
 	out = []
@@ -172,9 +171,7 @@ def getRandomData(data):
 		for i in range(num_attrs):
 			cnt = counts[i]
 			val = instance[i]
-			if not val in cnt.keys():
-				cnt[val] = 0
-			cnt[val] = cnt[val] + 1
+			cnt[val] = cnt[val] + 1 if  val in cnt.keys() else 1
 
 	for i in range(num_attrs):
 		tot = sum([counts[i][k] for k in counts[i].keys()])
@@ -195,7 +192,6 @@ def getRandomData(data):
 					random_data[row][i] = k
 					break
 
-	random_data.sort()
 	return  random_data
 
 def preprocessSoybeanData():
@@ -287,7 +283,6 @@ def preprocessSoybeanData():
 	writeArff(buildPath(dir, random_file, '.arff'), 'soybean', classes, attrs, named_random_data)
 
 if __name__ == '__main__':
-	print preprocessSoybeanData.__doc__
 	preprocessSoybeanData()
-	
+
 	
