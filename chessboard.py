@@ -20,9 +20,10 @@ Created on 27/10/2010
 """
 import  sys, math
 
-def getXY(dist):
-    width = int(math.ceil(math.sqrt(dist)))
-    outside = dist - (width - 1)**2
+def getXY(distance):
+    """ Given the distance travelled along a grid in the order described above, return the x,y coordinates """
+    width = int(math.ceil(math.sqrt(distance)))
+    outside = distance - (width - 1)**2
     side1 = min(width, outside)
     side2 = width - (outside - side1)
     return (side1,side2) if width % 2 else (side2,side1) 
@@ -31,6 +32,12 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print 'usage: python chessboard <distance>'
         exit()
-    x,y = getXY(int(sys.argv[1]))
+
+    distance = int(sys.argv[1])
+    if distance < 1:
+        print 'distance must be a positive integer'
+        exit()
+
+    x,y = getXY(distance)
     print x,y
 
