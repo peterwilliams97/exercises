@@ -7,12 +7,12 @@ Problem:
         4 3 8
         1 2 9
     
-    Given the distance travelled, give the current x and y coordinates
+    Given the distance travelled, return the current x and y coordinates
     
-    Write your program to read the distance from the command line and write
+    Write a program to read the distance from the command line and write
     it x and y coordinates to stdout
     
-    Your program should work on arbitrarily large integers
+    Your program should work on distances of up to 1,000,000 and greater.
      
 Created on 27/10/2010
 
