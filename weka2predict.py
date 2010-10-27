@@ -6,7 +6,7 @@ import sys, os, os.path, csv
 def wekaToPredict(weka_filename):
     """ Convert a Weka formatted .cvs file to a Google
         Predict .csv file by moving class from last 
-        colum to first
+        column to first
     """
     parts = os.path.splitext(weka_filename)
     predict_filename = parts[0] + '.gp' + parts[1]

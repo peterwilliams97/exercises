@@ -131,6 +131,20 @@ def applyAttrs(data, attrs):
 
 	return out
 
+def getClassDistribution(data):
+	classes = set([instance[0] for instance in data])
+	class_distribution = {}.fromkeys(classes, 0)
+	for instance in data:
+		class_distribution[instance[0]] = class_distribution[instance[0]] + 1
+	return class_distribution
+
+def dictToMatrix(d):
+	m = [[k,d[k]] for k in sorted(d.keys())]
+	return sorted(m, key = lambda x: -x[1])
+
+def removeClassesWithFewerInstances(data, class_distribution, min_instances):
+	return [instance for instance in data if class_distribution[instance[0]] >= min_instances]
+
 def writeArff(file_name, relation, classes, attrs, data):
 	""" Write a Weka .arff file """
 	print 'writeArff:', file_name, len(data), len(data[0])
@@ -259,11 +273,21 @@ def preprocessSoybeanData():
 	named_test_data = applyAttrs(filtered_test_data, attrs)
 	named_combined_data = applyAttrs(filtered_combined_data, attrs)
 	named_random_data = applyAttrs(filtered_random_data, attrs)
+	
+	""" Get the class distribution """
+	class_distribution_training = getClassDistribution(named_training_data)
+	class_distribution_test = getClassDistribution(named_test_data)
+	class_distribution_combined = getClassDistribution(named_combined_data)
+
+	named_training_data = removeClassesWithFewerInstances(named_training_data, class_distribution_training,2)
 
 	""" Create a header row for the .csv file """
 	header = makeHeaderRow(attrs)
 
 	""" Write out the .csv files """
+	
+	csv.writeCsv(appendDescription(dir, training_file, 'distribution'), dictToMatrix(class_distribution_training), ['Class', 'Number'])
+	
 	csv.writeCsv(appendDescription(dir, training_file, 'orig'), named_training_data, header)
 	csv.writeCsv(appendDescription(dir, test_file, 'orig'), named_test_data, header)
 	csv.writeCsv(appendDescription(dir, combined_file, 'orig'), named_combined_data, header)
