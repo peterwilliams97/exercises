@@ -10,9 +10,9 @@ Problem:
     Given the distance travelled, return the current x and y coordinates
     
     Write a program to read the distance from the command line and write
-    it x and y coordinates to stdout
+    its x and y coordinates to stdout
     
-    Your program should work on distances of up to 1,000,000 and greater.
+    Your program should work on distances of up to 1,000,000
      
 Created on 27/10/2010
 
@@ -30,7 +30,7 @@ def getXY(distance):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print 'usage: python chessboard <distance>'
+        print 'usage: python', sys.argv[0],'<distance>'
         exit()
 
     distance = int(sys.argv[1])
